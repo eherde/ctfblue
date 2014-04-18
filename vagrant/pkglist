@@ -12,8 +12,6 @@ vim
 ### frameworks
 apache2
 apache2-doc
-libapache2-mod-php5
-libapache2-mod-python
 lighttpd
 mysql-client
 php5
@@ -21,3 +19,7 @@ php5-mysql
 python
 python-mysqldb
 python-webpy
+# libs
+libapache2-mod-php5
+libapache2-mod-python
+libssl-dev
