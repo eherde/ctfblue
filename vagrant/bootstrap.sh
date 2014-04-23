@@ -42,7 +42,7 @@ _install_kernel()
 }
 
 # comment out the actions you want to skip
-#_system_update # required
-#_install_packages # required
+_system_update # required
+_install_packages # required
 #_install_git # optional
-_install_kernel # optional
+#_install_kernel # optional
