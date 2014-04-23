@@ -9,6 +9,12 @@ _system_update()
 	aptitude upgrade --assume-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 }
 
+_fix_time()
+{
+	echo "America/Los_Angeles" > /etc/timezone
+	dpkg-reconfigure -f noninteractive tzdata
+}
+
 _install_packages()
 {
 	local pkgs=$(cat /vagrant/pkglist | grep -v "^#" | awk '{print $1}')
@@ -43,6 +49,7 @@ _install_kernel()
 
 # comment out the actions you want to skip
 _system_update # required
+_fix_time # recommended
 _install_packages # required
 #_install_git # optional
 #_install_kernel # optional
