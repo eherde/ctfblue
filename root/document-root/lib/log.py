@@ -4,9 +4,9 @@ import sys
 
 sys.dont_write_byte_code = True
 
-logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s',
-		datefmt='%Y-%m-%d %H:%M:%S',
-		level=logging.DEBUG)
+LFORMAT = '%(asctime)s [%(levelname)s]: %(message)s'
+DFORMAT = '%Y-%m-%d %H:%M:%S'
+logging.basicConfig(format=LFORMAT, datefmt=DFORMAT)
 
 def err_fmt():
 	# get the frame we want
@@ -29,7 +29,28 @@ def error(msg):
 def critical(msg):
 	logging.critical(err_fmt() + ' ' + msg)
 
+def die(msg, ec=1):
+	critical(msg + ' Exit %d.' % ec)
+	sys.exit(ec)
+
+def set_lvl(lvl):
+	if not lvl:
+		return -1
+	logging.getLogger().setLevel(lvl)
+
+def add_logfile(path, lvl=logging.INFO):
+	if not path or not lvl:
+		return -1
+	root_logger = logging.getLogger()
+	fmt = logging.Formatter(LFORMAT, DFORMAT)
+	fh = logging.FileHandler(path)
+	fh.setLevel(lvl)
+	fh.setFormatter(fmt)
+	root_logger.addHandler(fh)
+	return 0
+
 if __name__ == '__main__':
+	add_logfile('test.log')
 	debug("This is debug.")
 	info("This is info.")
 	warning("This is warning.")

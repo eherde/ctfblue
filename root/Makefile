@@ -6,6 +6,7 @@ DOC_ROOT = /var/www
 LETC = /etc/lighttpd
 LCONF = $(LETC)/lighttpd.conf
 LIGHTY = /usr/sbin/lighttpd
+USER = www-data
 
 # silence output
 QUIET = >/dev/null 2>&1
@@ -20,7 +21,10 @@ CERT_NAME = ctfblue
 CERT_EMAIL = .
 CERT = $(LETC)/server.pem
 
-HERE = $(wildcard $(DROOT)/*.py) $(wildcard $(DROOT)/lib/*.py) $(wildcard $(DROOT)/templates/*.html)
+HERE += $(wildcard $(DROOT)/*.py)
+HERE += $(wildcard $(DROOT)/lib/*.py)
+HERE += $(wildcard $(DROOT)/ctf-data/*.yaml)
+HERE += $(wildcard $(DROOT)/templates/*.html)
 DIST = $(addprefix $(DOC_ROOT), $(subst $(DROOT),,$(HERE)))
 TARGETS += $(DIST)
 TARGETS += $(LCONF)
@@ -29,6 +33,7 @@ TARGETS += $(CERT)
 all: $(TARGETS)
 
 install: all
+	chown -R $(USER):$(USER) $(DOC_ROOT)
 	service lighttpd restart
 
 $(LCONF): %: $(ROOT)%
@@ -40,7 +45,12 @@ $(DOC_ROOT)/%.py: $(DROOT)/%.py
 	@# compile-check each file before copying
 	@python -c "__import__('compiler').parse(open('$<').read())"
 	cp $< $@
+
 $(DOC_ROOT)/templates/%.html: $(DROOT)/templates/%.html
+	@mkdir --parents $(@D)
+	cp $< $@
+
+$(DOC_ROOT)/ctf-data/%.yaml: $(DROOT)/ctf-data/%.yaml
 	@mkdir --parents $(@D)
 	cp $< $@
 
