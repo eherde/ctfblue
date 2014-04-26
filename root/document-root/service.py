@@ -31,9 +31,9 @@ class index:
 def configure_service():
 	c = config.Configurator()
 	c.load(configfile)
-	if log.set_lvl(c.getLogLvl()):
+	if log.set_lvl(c.lvl):
 		log.die("Failed to set default log level.")
-	if log.add_logfile(c.getLogFile(), c.getLogLvl()):
+	if log.add_logfile(c.log, c.lvl):
 		log.die("Failed to configure logging.")
 
 if __name__ == "__main__":

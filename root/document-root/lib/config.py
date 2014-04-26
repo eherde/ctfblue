@@ -7,28 +7,32 @@ sys.dont_write_byte_code = True
 
 class Configurator:
 	''' Class for configuration management. '''
-	config = None
+	def __init__(self):
+		self._config = None
 	def load(self, path):
 		log.debug("Loading config file %s." % path)
 		with open(path, "r") as f:
-			self.config = yaml.load(f)
-	def getDBFile(self):
+			self._config = yaml.load(f)
+	@property
+	def db(self):
 		try:
-			dbfile = self.config['db']['file']
+			dbfile = self._config['db']['file']
 			return dbfile
 		except:
 			log.error("No config entry 'db.file'")
 			return None
-	def getLogFile(self):
+	@property
+	def log(self):
 		try:
-			logfile = self.config['log']['file']
+			logfile = self._config['log']['file']
 			return logfile
 		except:
 			log.error("No config entry 'log.file'")
 			return None
-	def getLogLvl(self):
+	@property
+	def lvl(self):
 		try:
-			loglvl = self.config['log']['level']
+			loglvl = self._config['log']['level']
 			return loglvl
 		except:
 			log.error("No config entry 'log.level'")
