@@ -28,31 +28,26 @@ class Configurator:
 	@property
 	def db(self):
 		try:
-			dbfile = self._config['db']['file']
-			return dbfile
+			return self._config['db']['file']
 		except:
-			log.error("No config entry 'db.file'")
 			return None
 	##
 	# @return log file path
 	@property
 	def log(self):
 		try:
-			logfile = self._config['log']['file']
-			return logfile
+			return self._config['log']['file']
 		except:
-			log.error("No config entry 'log.file'")
 			return None
 	##
 	# @return log level
 	@property
 	def lvl(self):
 		try:
-			loglvl = self._config['log']['level']
-			return loglvl
+			return self._config['log']['level']
 		except:
-			log.error("No config entry 'log.level'")
 			return None
 
 if __name__ == '__main__':
-	pass
+	c = Configurator()
+	c.load('../ctf-data/ctf.yaml')
