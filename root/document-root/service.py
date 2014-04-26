@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# system modules
 import logging
 import os
 import sys
@@ -12,6 +13,7 @@ datadir = 'ctf-data'
 library_path = os.path.join(rootdir, './lib')
 sys.path.append(library_path)
 
+# local modules
 import config
 import log
 
@@ -22,12 +24,20 @@ urls = (
 	'/', 'index',
 )
 
+##
+# @brief index page
 class index:
+	##
+	# @brief generate index
+	#
+	# @return index.html
 	def GET(self):
 		name = web.cookies().get('testcookie')
 		web.setcookie('testcookie', 'testvalue', 10, secure=True, httponly=True)
 		return render.index(name)
 
+##
+# @brief configure the web service
 def configure_service():
 	c = config.Configurator()
 	c.load(configfile)
