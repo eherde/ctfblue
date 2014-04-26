@@ -20,7 +20,7 @@ CERT_NAME = ctfblue
 CERT_EMAIL = .
 CERT = $(LETC)/server.pem
 
-HERE = $(wildcard $(DROOT)/*.py) $(wildcard $(DROOT)/templates/*.html)
+HERE = $(wildcard $(DROOT)/*.py) $(wildcard $(DROOT)/lib/*.py) $(wildcard $(DROOT)/templates/*.html)
 DIST = $(addprefix $(DOC_ROOT), $(subst $(DROOT),,$(HERE)))
 TARGETS += $(DIST)
 TARGETS += $(LCONF)
@@ -35,17 +35,23 @@ $(LCONF): %: $(ROOT)%
 	$(LIGHTY) -t -f $< $(QUIET)
 	cp $< $@
 
-$(DOC_ROOT)/%: $(DROOT)/%
+$(DOC_ROOT)/%.py: $(DROOT)/%.py
+	@mkdir --parents $(@D)
+	@# compile-check each file before copying
+	@python -c "__import__('compiler').parse(open('$<').read())"
+	cp $< $@
+$(DOC_ROOT)/templates/%.html: $(DROOT)/templates/%.html
 	@mkdir --parents $(@D)
 	cp $< $@
 
 .DELETE_ON_ERROR: $(CERT)
 $(CERT):
-	echo -en "$(CERT_COUNTRY)\n$(CERT_STATE)\n$(CERT_LOCAL)\n$(CERT_ORG)\n$(CERT_UNIT)\n$(CERT_NAME)\n$(CERT_EMAIL)\n" | \
+	@echo -en "$(CERT_COUNTRY)\n$(CERT_STATE)\n$(CERT_LOCAL)\n$(CERT_ORG)\n$(CERT_UNIT)\n$(CERT_NAME)\n$(CERT_EMAIL)\n" | \
 	openssl req -new -x509 -keyout $@ -out $@ -days 365 -nodes $(QUIET)
-	chmod 0400 $@
+	@chmod 0400 $@
 
 clean:
 	$(RM) $(TARGETS)
+	@find . -name "*.pyc" -delete
 
 .PHONY: all install clean
