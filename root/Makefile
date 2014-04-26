@@ -11,6 +11,9 @@ USER = www-data
 # silence output
 QUIET = >/dev/null 2>&1
 
+GITVER = $(shell git rev-parse --short HEAD)
+VERSION = $(shell eval $$(cat version) && echo $$VERSION)
+
 # Certificate information
 CERT_COUNTRY = US
 CERT_STATE = CA
@@ -21,6 +24,7 @@ CERT_NAME = ctfblue
 CERT_EMAIL = .
 CERT = $(LETC)/server.pem
 
+# code targets
 HERE += $(wildcard $(DROOT)/*.py)
 HERE += $(wildcard $(DROOT)/lib/*.py)
 HERE += $(wildcard $(DROOT)/ctf-data/*.yaml)
@@ -30,11 +34,21 @@ TARGETS += $(DIST)
 TARGETS += $(LCONF)
 TARGETS += $(CERT)
 
+# documentation targets
+DOXYFILE=$(DROOT)/Doxyfile
+
 all: $(TARGETS)
 
 install: all
 	chown -R $(USER):$(USER) $(DOC_ROOT)
 	service lighttpd restart
+
+$(DOXYFILE): $(DOXYFILE).template
+	sed --expression 's/GITVER/$(GITVER)/' --expression 's/VERSION/$(VERSION)/' $< > $@
+
+pdf: $(DOXYFILE)
+	cd $(DROOT) && doxygen
+	$(MAKE) -C $(DROOT)/latex
 
 $(LCONF): %: $(ROOT)%
 	$(LIGHTY) -t -f $< $(QUIET)
@@ -62,6 +76,7 @@ $(CERT):
 
 clean:
 	$(RM) $(TARGETS)
+	$(RM) -r $(DROOT)/html $(DROOT)/latex
 	@find . -name "*.pyc" -delete
 
-.PHONY: all install clean
+.PHONY: all install clean pdf
