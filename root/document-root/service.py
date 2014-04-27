@@ -19,6 +19,7 @@ import log
 
 configfile = os.path.join(rootdir, datadir, 'ctf.yaml')
 render = web.template.render('templates/')
+sys.excepthook = log.exceptions
 
 urls = (
 	'/', 'index',
