@@ -15,11 +15,11 @@ sys.path.append(library_path)
 
 # local modules
 import config
-import log
+from log import l, exceptions
 
 configfile = os.path.join(rootdir, datadir, 'ctf.yaml')
 render = web.template.render('templates/')
-sys.excepthook = log.exceptions
+sys.excepthook = exceptions
 
 urls = (
 	'/', 'index',
@@ -40,7 +40,7 @@ class index:
 if __name__ == "__main__":
 	c = config.Configurator()
 	c.load(configfile)
-	l = log.CTFLogger(c.log, level=c.lvl)
+	l.__init__(c.log, level=c.lvl)
 	l.info("Starting web service.")
 	app = web.application(urls, globals())
 	app.run()

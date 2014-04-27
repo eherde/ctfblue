@@ -38,6 +38,7 @@ class CTFLogger(logging.Logger):
 			fh = logging.FileHandler(f)
 			fh.setFormatter(fmt)
 			self.addHandler(fh)
+
 	##
 	# @brief log a critical error and exit
 	#
@@ -47,15 +48,22 @@ class CTFLogger(logging.Logger):
 		self.critical(msg + ' Exit %d' % ec)
 		sys.exit(ec)
 
+# Create a logging instance
+l = CTFLogger()
+
+##
+# @brief handler for uncaught exception logging
+#
+# @param ex_cls exception name
+# @param ex exception description
+# @param tb traceback
 def exceptions(ex_cls, ex, tb):
-	l = CTFLogger('ctf-data/ctf.log')
 	trace = str.split(traceback.format_tb(tb)[0])
 	exfile = trace[1].replace(',','').replace('"','')
 	exline = trace[3].replace(',','')
 	l.critical('%s:%s: %s: %s' % (exfile, exline, ex_cls, ex))
 
 if __name__ == '__main__':
-	l = CTFLogger()
 	l.debug("This is debug.")
 	l.info("This is info.")
 	l.warning("This is warning.")
