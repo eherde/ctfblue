@@ -1,7 +1,7 @@
 ROOT = $(abspath .)
 # local root
 DROOT = document-root
-# install root. mutch match the entry in lighttpd.conf
+# install root. must match the entry in lighttpd.conf
 DOC_ROOT = /var/www
 LETC = /etc/lighttpd
 LCONF = $(LETC)/lighttpd.conf
@@ -56,9 +56,11 @@ $(LCONF): %: $(ROOT)%
 
 $(DOC_ROOT)/%.py: $(DROOT)/%.py
 	@mkdir --parents $(@D)
-	@# compile-check each file before copying
+	@# compile-check each file
 	@python -c "__import__('compiler').parse(open('$<').read())"
-	cp $< $@
+	@# run unit tests
+	@if [ "$(shell basename $<)" != "service.py" ]; then python $<; fi
+	@cp $< $@
 
 $(DOC_ROOT)/templates/%.html: $(DROOT)/templates/%.html
 	@mkdir --parents $(@D)

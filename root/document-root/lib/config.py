@@ -4,9 +4,10 @@
 # Configurator class is responsible for servicing configuration information.
 
 # system modules
+import os
 import sys
-import yaml
 import unittest
+import yaml
 
 sys.dont_write_byte_code = True
 
@@ -51,7 +52,10 @@ class TestConfigurator(unittest.TestCase):
 	def test_load(self):
 		c = Configurator()
 		self.assertTrue(c)
-		self.assertTrue(c.load('ctf-data/ctf.yaml') == None)
+		self.assertTrue(c.load('test-data/ctf.yaml') == None)
 		self.assertRaises(IOError, c.load, '')
+
 if __name__ == '__main__':
-	unittest.main()
+	# run from the same directory as the module
+	os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
+	sys.exit(unittest.main(verbosity=2))

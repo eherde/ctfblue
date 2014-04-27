@@ -1,0 +1,5 @@
+log:
+        file: ctf-data/ctf.log
+        level: DEBUG
+db:
+        file: ctf-data/ctf.db

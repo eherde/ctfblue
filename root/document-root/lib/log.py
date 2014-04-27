@@ -6,8 +6,10 @@
 # system modules
 import inspect
 import logging
+import os
 import sys
 import traceback
+import unittest
 
 sys.dont_write_byte_code = True
 
@@ -25,15 +27,19 @@ class CTFLogger(logging.Logger):
 	def __init__(self, *args, **kwargs):
 		# call parent init
 		logging.Logger.__init__(self, '', level=logging.DEBUG)
+		stderr = True
 		# optionally set the log level
 		if 'level' in kwargs:
 			self.setLevel(kwargs['level'])
+		if 'stderr' in kwargs:
+			stderr = kwargs['stderr']
 		# set formatting
 		fmt = logging.Formatter(LFORMAT, DFORMAT)
 		# defaults to stderr
-		sh = logging.StreamHandler()
-		sh.setFormatter(fmt)
-		self.addHandler(sh)
+		if stderr:
+			sh = logging.StreamHandler()
+			sh.setFormatter(fmt)
+			self.addHandler(sh)
 		for f in args:
 			fh = logging.FileHandler(f)
 			fh.setFormatter(fmt)
@@ -63,9 +69,40 @@ def exceptions(ex_cls, ex, tb):
 	exline = trace[3].replace(',','')
 	l.critical('%s:%s: %s: %s' % (exfile, exline, ex_cls, ex))
 
+class TestLogger(unittest.TestCase):
+	def test_init(self):
+		self.assertTrue(CTFLogger())
+		self.assertTrue(CTFLogger('test-data/test.log'))
+		self.assertTrue(CTFLogger(level=logging.DEBUG))
+		self.assertTrue(CTFLogger(level=logging.INFO))
+		self.assertTrue(CTFLogger(level=logging.WARNING))
+		self.assertTrue(CTFLogger(level=logging.ERROR))
+		self.assertTrue(CTFLogger(level=logging.CRITICAL))
+		self.assertTrue(CTFLogger(level='DEBUG'))
+		self.assertTrue(CTFLogger(level='INFO'))
+		self.assertTrue(CTFLogger(level='WARNING'))
+		self.assertTrue(CTFLogger(level='ERROR'))
+		self.assertTrue(CTFLogger(level='CRITICAL'))
+		self.assertTrue(os.path.exists('test-data/test.log'))
+		os.unlink('test-data/test.log')
+	def test_log(self):
+		t = CTFLogger('test-data/test.log', stderr=False)
+		self.assertTrue(t)
+		t.debug("debug")
+		t.info("info")
+		t.warning("warning")
+		t.error("error")
+		t.critical("critical")
+		try:
+			t.die("die")
+		except SystemExit:
+			pass
+		try:
+			t.die("die",ec=2)
+		except SystemExit:
+			pass
+
 if __name__ == '__main__':
-	l.debug("This is debug.")
-	l.info("This is info.")
-	l.warning("This is warning.")
-	l.error("This is error.")
-	l.critical("This is critical.")
+	# run from the same directory as the module
+	os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
+	sys.exit(unittest.main(verbosity=2))
