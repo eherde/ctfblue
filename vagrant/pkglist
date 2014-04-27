@@ -4,6 +4,7 @@ gdb
 git
 nmap
 ntp
+sqlite3
 strace
 tcpdump
 tmux
@@ -11,9 +12,9 @@ tree
 vim
 ### frameworks
 lighttpd
-mysql-client
 python
-python-mysqldb
+python-crypto
 python-webpy
+python-yaml
 # libs
 libssl-dev
