@@ -6,9 +6,7 @@
 # system modules
 import sys
 import yaml
-
-# local modules
-import log
+import unittest
 
 sys.dont_write_byte_code = True
 
@@ -47,6 +45,13 @@ class Configurator:
 		except:
 			return None
 
+class TestConfigurator(unittest.TestCase):
+	def test_init(self):
+		self.assertTrue(Configurator())
+	def test_load(self):
+		c = Configurator()
+		self.assertTrue(c)
+		self.assertTrue(c.load('ctf-data/ctf.yaml') == None)
+		self.assertRaises(IOError, c.load, '')
 if __name__ == '__main__':
-	c = Configurator()
-	c.load('../ctf-data/ctf.yaml')
+	unittest.main()
