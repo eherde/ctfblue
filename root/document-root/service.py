@@ -36,18 +36,10 @@ class index:
 		web.setcookie('testcookie', 'testvalue', 10, secure=True, httponly=True)
 		return render.index(name)
 
-##
-# @brief configure the web service
-def configure_service():
+if __name__ == "__main__":
 	c = config.Configurator()
 	c.load(configfile)
-	if log.set_lvl(c.lvl):
-		log.die("Failed to set default log level.")
-	if log.add_logfile(c.log, c.lvl):
-		log.die("Failed to configure logging.")
-
-if __name__ == "__main__":
-	configure_service()
-	log.info("Starting web service.")
+	l = log.CTFLogger(c.log, level=c.lvl)
+	l.info("Starting web service.")
 	app = web.application(urls, globals())
 	app.run()

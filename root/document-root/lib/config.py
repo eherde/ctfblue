@@ -20,7 +20,6 @@ class Configurator:
 	#
 	# @param path file to load
 	def load(self, path):
-		log.debug("Loading config file %s." % path)
 		with open(path, "r") as f:
 			self._config = yaml.load(f)
 	##

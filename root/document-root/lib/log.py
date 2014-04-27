@@ -10,93 +10,44 @@ import sys
 
 sys.dont_write_byte_code = True
 
-LFORMAT = '%(asctime)s [%(levelname)s]: %(message)s'
+LFORMAT = '%(asctime)s [%(levelname)s]:\t%(module)s:%(lineno)d: %(message)s'
 DFORMAT = '%Y-%m-%d %H:%M:%S'
-logging.basicConfig(format=LFORMAT, datefmt=DFORMAT)
 
 ##
-# @brief generate the file and line number information
-# of the function calling the logging mechanism
-#
-# @return string of error message
-def err_fmt():
-	# get the frame we want
-	p = inspect.getouterframes(inspect.currentframe())[-1]
-	# return the formated file and linenumber
-	return '%s:%d:' % (p[1],p[2])
-
-##
-# @brief log a debug message
-#
-# @param msg the message
-def debug(msg):
-	logging.debug(err_fmt() + ' ' + msg)
-
-##
-# @brief log an info message
-#
-# @param msg the message
-def info(msg):
-	logging.info(msg)
-
-##
-# @brief log a warning message
-#
-# @param msg the message
-def warning(msg):
-	logging.warning(msg)
-
-##
-# @brief log an error message
-#
-# @param msg the message
-def error(msg):
-	logging.error(msg)
-
-##
-# @brief log a critical message
-#
-# @param msg the message
-def critical(msg):
-	logging.critical(err_fmt() + ' ' + msg)
-
-##
-# @brief log a critical message and exit
-#
-# @param msg the message
-# @param ec exit code
-def die(msg, ec=1):
-	critical(msg + ' Exit %d.' % ec)
-	sys.exit(ec)
-
-##
-# @brief set the global log level
-#
-# @param lvl the level
-def set_lvl(lvl):
-	if not lvl:
-		return -1
-	logging.getLogger().setLevel(lvl)
-
-##
-# @brief add a logfile
-#
-# @param path the logfile
-# @param lvl the loglevel for this file
-def add_logfile(path, lvl=logging.INFO):
-	if not path or not lvl:
-		return -1
-	root_logger = logging.getLogger()
-	fmt = logging.Formatter(LFORMAT, DFORMAT)
-	fh = logging.FileHandler(path)
-	fh.setLevel(lvl)
-	fh.setFormatter(fmt)
-	root_logger.addHandler(fh)
+# @brief Logging mechanism
+class CTFLogger(logging.Logger):
+	##
+	# @brief initialize a logging object
+	#
+	# @param args list of files to log to
+	# @param kwargs use level=<LEVEL>. default is DEDBUG
+	def __init__(self, *args, **kwargs):
+		# call parent init
+		logging.Logger.__init__(self, '', level=logging.DEBUG)
+		# optionally set the log level
+		if 'level' in kwargs:
+			self.setLevel(kwargs['level'])
+		# set formatting
+		fmt = logging.Formatter(LFORMAT, DFORMAT)
+		# defaults to stderr
+		sh = logging.StreamHandler()
+		sh.setFormatter(fmt)
+		self.addHandler(sh)
+		for f in args:
+			fh = logging.FileHandler(f)
+			fh.setFormatter(fmt)
+			self.addHandler(fh)
+	##
+	# @param msg the message
+	# @param ec exit code
+	def die(self, msg, ec=1):
+		self.critical(msg + ' Exit %d' % ec)
+		sys.exit(ec)
 
 if __name__ == '__main__':
-	add_logfile('test.log')
-	debug("This is debug.")
-	info("This is info.")
-	warning("This is warning.")
-	error("This is error.")
-	critical("This is critical.")
+	l = CTFLogger(level=logging.DEBUG)
+	l.debug("This is debug.")
+	l.info("This is info.")
+	l.warning("This is warning.")
+	l.error("This is error.")
+	l.critical("This is critical.")
