@@ -7,6 +7,7 @@ LETC = /etc/lighttpd
 LCONF = $(LETC)/lighttpd.conf
 LIGHTY = /usr/sbin/lighttpd
 USER = www-data
+DB = $(DOC_ROOT)/ctf-data/ctf.db
 
 # silence output
 QUIET = >/dev/null 2>&1
@@ -33,6 +34,7 @@ DIST = $(addprefix $(DOC_ROOT), $(subst $(DROOT),,$(HERE)))
 TARGETS += $(DIST)
 TARGETS += $(LCONF)
 TARGETS += $(CERT)
+TARGETS += $(DB)
 
 # documentation targets
 DOXYFILE=$(DROOT)/Doxyfile
@@ -40,8 +42,12 @@ DOXYFILE=$(DROOT)/Doxyfile
 all: $(TARGETS)
 
 install: all
+	$(RM) $(DB)
+	sqlite3 $(DB) < init.sql
 	chown -R $(USER):$(USER) $(DOC_ROOT)
 	service lighttpd restart
+
+$(DB):
 
 $(DOXYFILE): $(DOXYFILE).template
 	sed --expression 's/GITVER/$(GITVER)/' --expression 's/VERSION/$(VERSION)/' $< > $@
