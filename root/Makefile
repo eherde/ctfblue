@@ -30,6 +30,7 @@ HERE += $(wildcard $(DROOT)/*.py)
 HERE += $(wildcard $(DROOT)/lib/*.py)
 HERE += $(wildcard $(DROOT)/ctf-data/*.yaml)
 HERE += $(wildcard $(DROOT)/templates/*.html)
+HERE += $(wildcard $(DROOT)/templates/*.xml)
 DIST = $(addprefix $(DOC_ROOT), $(subst $(DROOT),,$(HERE)))
 TARGETS += $(DIST)
 TARGETS += $(LCONF)
@@ -69,6 +70,10 @@ $(DOC_ROOT)/%.py: $(DROOT)/%.py
 	@cp $< $@
 
 $(DOC_ROOT)/templates/%.html: $(DROOT)/templates/%.html
+	@mkdir --parents $(@D)
+	cp $< $@
+
+$(DOC_ROOT)/templates/%.xml: $(DROOT)/templates/%.xml
 	@mkdir --parents $(@D)
 	cp $< $@
 
