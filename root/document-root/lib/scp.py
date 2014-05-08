@@ -17,7 +17,7 @@
 #
 # The implementation below uses a fixed size packed structure to store
 # the cookie. The fields are as follows:
-# - username   => 32 characters
+# - username   => 64 characters
 # - expiration => long long
 # - data       => 256 characters
 # - Session ID => long long
@@ -39,7 +39,7 @@ from log import l
 sys.dont_write_byte_code = True
 
 # format specifiers for packing and unpacking cookie data
-USER_FMT = '32s'
+USER_FMT = '64s'
 EXPR_FMT = 'q'
 DATA_FMT = '256s'
 SESS_FMT = 'q'
@@ -105,7 +105,7 @@ def hashd(user, expiration, data, session, key):
 # @param key 16 byte secret key (private)
 # @param iv 16 byte initialization vector (public)
 #
-# @return ciphertex
+# @return ciphertext
 def encrypt(msg, key, iv):
 	# TODO: validate inputs
 	crypter = AES.new(key, AES.MODE_CBC, iv)
@@ -154,7 +154,7 @@ def is_valid(cookie_data, session):
 		return False
 
 ##
-# @brief Implementation of Secure Cookie Protocal
+# @brief Implementation of Secure Cookie Protocol
 class SecureCookie:
 	##
 	# @brief Initialize packed cookie data
