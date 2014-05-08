@@ -1,5 +1,5 @@
-CREATE TABLE Users(GUID, Username, Password, SessionID);
-CREATE TABLE Books(Name VARCHAR(255), Price INTEGER);
+CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID);
+CREATE TABLE Books(Name VARCHAR(255), Price REAL);
 INSERT INTO Books VALUES ("Secure Electronic Commerce", 27.50);
 INSERT INTO Books VALUES ("Security Engineering", 45.99);
 INSERT INTO Books VALUES ("Web Security, Privacy, and Commerce", 22.99);

@@ -62,6 +62,8 @@ class adduser:
 		d = db.DB('ctf-data/ctf.db')
 		l.debug('Creating new user %s' % username)
 		guid = d.addUser(username, h.hexdigest())
+		if not guid:
+			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
 		return render.index(None)
 
 if __name__ == "__main__":

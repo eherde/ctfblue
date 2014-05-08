@@ -73,7 +73,11 @@ class DB:
 		# The session_id will be used to simulate an SSL ID.
 		session_id = str(uuid.uuid4())
 		entry = ( guid, username, password, session_id, )
-		self.xec.execute(statement, entry)
+		try:
+			self.xec.execute(statement, entry)
+		except sqlite3.IntegrityError:
+			l.warn("username %s already exists." % username)
+			return None
 		self.con.commit()
 		return guid
 	##
@@ -142,7 +146,7 @@ testsession = '12345678-abcd-abcd-1234-1234567890ab'
 class TestDB(unittest.TestCase):
 	def setUp(self):
 		self.db = DB(testdb)
-		self.db.xec.execute("CREATE TABLE Users(GUID, Username, Password, SessionID)")
+		self.db.xec.execute("CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID)")
 		self.db.con.commit()
 	def tearDown(self):
 		self.db.con.close()
@@ -162,6 +166,9 @@ class TestDB(unittest.TestCase):
 		self.assertEqual(self.db.addUser('1234567890abcdefghij1234567890123', testpass), None)
 	def test_addUser_neg_passbadregex(self):
 		self.assertEqual(self.db.addUser(testuser, 'abcdefg'), None)
+	def test_addUser_neg_userexists(self):
+		self.assertNotEqual(self.db.addUser(testuser, testpass), None)
+		self.assertEqual(self.db.addUser(testuser, testpass), None)
 	def test_getUser(self):
 		guid = self.db.addUser(testuser, testpass)
 		self.assertFalse(guid is None)
