@@ -2,7 +2,6 @@
 
 # system modules
 import hashlib
-import logging
 import os
 import sys
 import web
@@ -45,10 +44,10 @@ class adduser:
 	def POST(self):
 		l.info('POST adduser')
 		i = web.input()
-		if not i.has_key('username'):
+		if 'username' not in i:
 			l.error('username field required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing username')
-		if not i.has_key('password'):
+		if 'password' not in i:
 			l.error('password field required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing password')
 		# XXX: validate inputs

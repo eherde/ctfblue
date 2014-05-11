@@ -4,7 +4,6 @@
 # Wrap standard logging with formatting and file logging.
 
 # system modules
-import inspect
 import logging
 import os
 import sys

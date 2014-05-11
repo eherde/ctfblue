@@ -52,7 +52,7 @@ class TestConfigurator(unittest.TestCase):
 	def test_load(self):
 		c = Configurator()
 		self.assertTrue(c)
-		self.assertTrue(c.load('test-data/ctf.yaml') == None)
+		self.assertTrue(c.load('test-data/ctf.yaml') is None)
 		self.assertRaises(IOError, c.load, '')
 
 if __name__ == '__main__':
