@@ -4,6 +4,7 @@
 import hashlib
 import os
 import sys
+import time
 import web
 
 sys.dont_write_byte_code = True
@@ -14,6 +15,7 @@ sys.path.append(os.path.join(rootdir, 'lib'))
 # local modules
 import config
 import db
+import scp
 from log import l, exceptions
 
 configfile = os.path.join('ctf-data/ctf.yaml')
@@ -23,7 +25,11 @@ sys.excepthook = exceptions
 urls = (
 	'/', 'index',
 	'/adduser', 'adduser',
+	'/logon', 'logon'
 )
+
+def logon_redirect():
+	return web.seeother('/logon')
 
 ##
 # @brief index page
@@ -33,6 +39,7 @@ class index:
 	#
 	# @return index.html
 	def GET(self):
+		l.info('GET index')
 		name = web.cookies().get('testcookie')
 		web.setcookie('testcookie', 'testvalue', 10, secure=True, httponly=True)
 		return render.index(name)
@@ -61,6 +68,39 @@ class adduser:
 			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
 		return render.index(None)
 
+class logon:
+	def GET(self):
+		l.info('GET logon')
+		return render.logon()
+	def POST(self):
+		l.info('POST logon')
+		i = web.input()
+		if 'username' not in i:
+			l.error('username field required for POST')
+			return logon_redirect()
+		if 'password' not in i:
+			l.error('password field required for POST')
+			return logon_redirect()
+		# XXX: validate inputs
+		username = str(i['username'])
+		password = str(i['password'])
+		h = hashlib.sha1()
+		# hash password
+		h.update(password)
+		# hash with salt
+		h.update(username)
+		(db_guid, db_session) = web.d.getValidUser(username, h.hexdigest())
+		if not db_guid:
+			# invalid credentials
+			return logon_redirect()
+		# create cookie
+		COOKIE_TTL = 10
+		expiration = int(time.time()) + COOKIE_TTL
+		cookie = scp.SecureCookie(db_guid, 1234, '', db_session)
+		# this may produce a slight variation in expiration dates between what we set
+		# and what web.py sets, but we really don't care.
+		#web.setcookie('ctfcookie', cookie.value, COOKIE_TTL, secure=True, httponly=True)
+		return render.index(None)
 if __name__ == "__main__":
 	# run from the same directory as the service file
 	os.chdir(rootdir)
