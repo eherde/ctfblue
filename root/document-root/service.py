@@ -67,8 +67,9 @@ if __name__ == "__main__":
 	c = config.Configurator()
 	c.load(configfile)
 	l.__init__(c.log, level=c.lvl)
-	web.d = db.DB(c.db)
-	if not web.d:
+	try:
+		web.d = db.DB(c.db)
+	except IOError:
 		l.die("Failed to initialize database.")
 	l.info("Starting web service.")
 	app = web.application(urls, globals())
