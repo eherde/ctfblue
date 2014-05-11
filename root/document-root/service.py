@@ -96,10 +96,10 @@ class logon:
 		# create cookie
 		COOKIE_TTL = 10
 		expiration = int(time.time()) + COOKIE_TTL
-		cookie = scp.SecureCookie(db_guid, 1234, '', db_session)
+		cookie = scp.SecureCookie(str(db_guid), expiration, 'mydata', str(db_session))
 		# this may produce a slight variation in expiration dates between what we set
 		# and what web.py sets, but we really don't care.
-		#web.setcookie('ctfcookie', cookie.value, COOKIE_TTL, secure=True, httponly=True)
+		web.setcookie('ctfcookie', cookie.value, COOKIE_TTL, secure=True, httponly=True)
 		return render.index(None)
 if __name__ == "__main__":
 	# run from the same directory as the service file
@@ -111,6 +111,10 @@ if __name__ == "__main__":
 		web.d = db.DB(c.db)
 	except IOError:
 		l.die("Failed to initialize database.")
+	try:
+		scp.secret_key = c.secret
+	except IOError:
+		l.die("Failed to initialize secret key.")
 	l.info("Starting web service.")
 	app = web.application(urls, globals())
 	app.run()

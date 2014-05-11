@@ -14,6 +14,8 @@ sys.dont_write_byte_code = True
 ##
 # @brief Interface for configuration settings
 class Configurator:
+	def __init__(self):
+		self._secret = None
 	##
 	# @brief Load configuration file
 	#
@@ -45,6 +47,26 @@ class Configurator:
 			return self._config['log']['level']
 		except:
 			return None
+	##
+	# @return log level
+	@property
+	def lvl(self):
+		try:
+			return self._config['log']['level']
+		except:
+			return None
+	##
+	# @return log level
+	@property
+	def secret(self):
+		if self._secret is None:
+			try:
+				keyfile = self._config['secret']['file']
+			except IOError, KeyError:
+				return None
+			with file(keyfile) as f:
+				self._secret = f.read()
+		return self._secret
 
 class TestConfigurator(unittest.TestCase):
 	def test_init(self):

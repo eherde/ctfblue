@@ -3,3 +3,5 @@ log:
         level: DEBUG
 db:
         file: ctf-data/ctf.db
+secret:
+        file: ctf-data/ctf.aes

@@ -24,6 +24,7 @@
 # - Digest     => 20 characters
 
 # system modules
+import base64
 import hashlib
 import hmac
 import os
@@ -42,7 +43,7 @@ sys.dont_write_byte_code = True
 USER_FMT = '64s'
 EXPR_FMT = 'q'
 DATA_FMT = '256s'
-SESS_FMT = 'q'
+SESS_FMT = '36s'
 DGST_FMT = '20s'
 
 # Secret key contents
@@ -183,9 +184,9 @@ class SecureCookie:
 				user, exp, ciphertext, hashed_data)
 # Values for testing
 TEST_USER = 'mytestuser'
-TEST_EXPIRATION = time.time()
+TEST_EXPIRATION = int(time.time())
 TEST_DATA = 'mytestdata'
-TEST_SESSION = 12345
+TEST_SESSION = '12345678-1234-1234-1234-1234567890ab'
 
 class TestSecureCookie(unittest.TestCase):
 	def setUp(self):

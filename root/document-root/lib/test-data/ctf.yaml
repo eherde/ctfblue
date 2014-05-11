@@ -1,5 +1,7 @@
 log:
-        file: ctf-data/ctf.log
+        file: test-data/ctf.log
         level: DEBUG
 db:
-        file: ctf-data/ctf.db
+        file: test-data/ctf.db
+secret:
+        file: test-data/ctf.aes

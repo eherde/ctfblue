@@ -8,6 +8,7 @@ LCONF = $(LETC)/lighttpd.conf
 LIGHTY = /usr/sbin/lighttpd
 USER = www-data
 DB = $(DOC_ROOT)/ctf-data/ctf.db
+SECRET = $(DOC_ROOT)/ctf-data/ctf.aes
 
 # silence output
 QUIET = >/dev/null 2>&1
@@ -45,6 +46,7 @@ all: $(TARGETS)
 install: all
 	$(RM) $(DB)
 	sqlite3 $(DB) < init.sql
+	openssl rand 16 -out $(SECRET)
 	chown -R $(USER):$(USER) $(DOC_ROOT)
 	service lighttpd restart
 
