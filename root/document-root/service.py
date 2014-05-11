@@ -28,8 +28,28 @@ urls = (
 	'/logon', 'logon'
 )
 
+COOKIE_NAME = 'ctfauth'
+COOKIE_TTL = 10
+
 def logon_redirect():
+	expire_cookie()
 	return web.seeother('/logon')
+
+def expire_cookie():
+	web.setcookie(COOKIE_NAME, '', -1)
+
+def create_cookie(guid, data, session):
+	# this may produce a slight variation in expiration dates between what we set
+	# and what web.py sets, but we really don't care.
+	expiration = int(time.time()) + COOKIE_TTL
+	cookie = scp.SecureCookie(guid, expiration, data, session)
+	web.setcookie(COOKIE_NAME, cookie.value, COOKIE_TTL, secure=True, httponly=True)
+
+def logged_on():
+	cookie_data = web.cookies().get(COOKIE_NAME)
+	if cookie_data is None:
+		return False
+	return scp.is_valid(cookie_data, '')
 
 ##
 # @brief index page
@@ -40,9 +60,9 @@ class index:
 	# @return index.html
 	def GET(self):
 		l.info('GET index')
-		name = web.cookies().get('testcookie')
-		web.setcookie('testcookie', 'testvalue', 10, secure=True, httponly=True)
-		return render.index(name)
+		if not logged_on():
+			return logon_redirect()
+		return render.index(None)
 
 class adduser:
 	def POST(self):
@@ -71,6 +91,7 @@ class adduser:
 class logon:
 	def GET(self):
 		l.info('GET logon')
+		expire_cookie()
 		return render.logon()
 	def POST(self):
 		l.info('POST logon')
@@ -93,14 +114,8 @@ class logon:
 		if not db_guid:
 			# invalid credentials
 			return logon_redirect()
-		# create cookie
-		COOKIE_TTL = 10
-		expiration = int(time.time()) + COOKIE_TTL
-		cookie = scp.SecureCookie(str(db_guid), expiration, 'mydata', str(db_session))
-		# this may produce a slight variation in expiration dates between what we set
-		# and what web.py sets, but we really don't care.
-		web.setcookie('ctfcookie', cookie.value, COOKIE_TTL, secure=True, httponly=True)
-		return render.index(None)
+		create_cookie(str(db_guid), '', '')
+		return web.seeother('/')
 if __name__ == "__main__":
 	# run from the same directory as the service file
 	os.chdir(rootdir)
