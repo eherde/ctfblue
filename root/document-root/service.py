@@ -20,9 +20,6 @@ configfile = os.path.join('ctf-data/ctf.yaml')
 render = web.template.render('templates/')
 sys.excepthook = exceptions
 
-global d
-d = None
-
 urls = (
 	'/', 'index',
 	'/adduser', 'adduser',
@@ -58,9 +55,8 @@ class adduser:
 		h.update(password)
 		# hash with salt
 		h.update(username)
-		d = db.DB('ctf-data/ctf.db')
 		l.debug('Creating new user %s' % username)
-		guid = d.addUser(username, h.hexdigest())
+		guid = web.d.addUser(username, h.hexdigest())
 		if not guid:
 			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
 		return render.index(None)
@@ -71,9 +67,9 @@ if __name__ == "__main__":
 	c = config.Configurator()
 	c.load(configfile)
 	l.__init__(c.log, level=c.lvl)
-	d = db.DB(c.db)
-	if not d:
-		l.critical("Failed to initialize database.")
+	web.d = db.DB(c.db)
+	if not web.d:
+		l.die("Failed to initialize database.")
 	l.info("Starting web service.")
 	app = web.application(urls, globals())
 	app.run()

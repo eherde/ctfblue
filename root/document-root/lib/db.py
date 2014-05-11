@@ -18,6 +18,7 @@ import sqlite3
 import sys
 import unittest
 import uuid
+import web
 
 # local modules
 from log import l
@@ -45,8 +46,9 @@ class DB:
 		if not os.path.exists(path) and path != ':memory:':
 			l.critical("Database %s does not exist, cannot connect." % path)
 			raise IOError
-		self.con = sqlite3.connect(path)
-		self.xec = self.con.cursor()
+		self.xec = web.database(dbn='sqlite', db=path)
+		# Prevent web.db from printing queries
+		self.xec.printing = False
 	##
 	# @brief Add a new user to the database
 	#
@@ -67,18 +69,15 @@ class DB:
 		if not RE_SHA1.match(password):
 			l.error("%s does not match regular expression '%s'." % (password, RE_SHA1.pattern))
 			return None
-		statement = 'INSERT INTO Users VALUES (?, ?, ?, ?)'
 		# The guid will be stored in the cookie with the user.
 		guid = str(uuid.uuid4())
 		# The session_id will be used to simulate an SSL ID.
 		session_id = str(uuid.uuid4())
-		entry = ( guid, username, password, session_id, )
 		try:
-			self.xec.execute(statement, entry)
+			self.xec.insert('Users', GUID=guid, Username=username, Password=password, SessionID=session_id)
 		except sqlite3.IntegrityError:
 			l.warn("username %s already exists." % username)
 			return None
-		self.con.commit()
 		return guid
 	##
 	# @brief clear the Session ID for a user. should be performed on logout.
@@ -86,15 +85,38 @@ class DB:
 	# @param guid 36 character guid string
 	#
 	# @return True or False
-	def clearSessionID(self, guid):
-		return self.setSessionID(guid, NULL_SESSION_ID)
+	def clearSessionID(self, args):
+		return self.setSessionID(args, NULL_SESSION_ID)
+	##
+	# @brief Get entries associated with a user by username
+	#
+	# @param usernam 32 character max string
+	#
+	# @return tuple (Username, Password, SessionID)
+	def getUser(self, username):
+		if type(username) is not str:
+			l.error("username type is not str")
+			return ( None, None, None, )
+		if len(username) > USERNAME_MAX:
+			l.error("%s is greater than %d characters." % (username, USERNAME_MAX))
+			return ( None, None, None, )
+		statement = 'SELECT GUID, Password, SessionID FROM Users WHERE Username = ?'
+		where = dict(Username=username)
+		res = self.xec.select('Users', what='GUID,Password,SessionID', where=web.db.sqlwhere(where))
+		try:
+			res = res[0]
+		except IndexError:
+			# This username did not exist, return the correct type
+			l.warn("username %s does not exist." % username)
+			return ( None, None, None, )
+		return (res.GUID, res.Password, res.SessionID)
 	##
 	# @brief Get entries associated with a user by guid
 	#
 	# @param guid 36 character guid string
 	#
 	# @return tuple (Username, Password, SessionID)
-	def getUser(self, guid):
+	def getUserG(self, guid):
 		if type(guid) is not str:
 			l.error("guid type is not str")
 			return ( None, None, None, )
@@ -102,13 +124,43 @@ class DB:
 			l.error("%s does not match regular expression '%s'." % (guid, RE_UUID.pattern))
 			return ( None, None, None, )
 		statement = 'SELECT Username, Password, SessionID FROM Users WHERE GUID = ?'
-		entry = ( guid, )
-		res = self.xec.execute(statement, entry).fetchone()
-		# This guid did not exist, return the correct type
-		if res is None:
+		where = dict(GUID=guid)
+		res = self.xec.select('Users', what='Username,Password,SessionID', where=web.db.sqlwhere(where))
+		try:
+			res = res[0]
+		except IndexError:
+			# This guid did not exist, return the correct type
 			l.warn("guid %s does not exist." % guid)
 			return ( None, None, None, )
-		return res
+		return (res.Username, res.Password, res.SessionID)
+	##
+	# @brief Get entries associated with a user by guid
+	#
+	# @param guid 36 character guid string
+	#
+	# @return tuple (Username, Password, SessionID)
+	def getValidUser(self, username, password):
+		if type(username) is not str:
+			l.error("username type is not str")
+			return ( None, None, )
+		if len(username) > USERNAME_MAX:
+			l.error("%s is more that %d characters." % (username, USERNAME_MAX))
+			return ( None, None, )
+		if type(password) is not str:
+			l.error("password type is not str")
+			return ( None, None, )
+		if not RE_SHA1.match(password):
+			l.error("%s does not match regular expression '%s'." % (password, RE_SHA1.pattern))
+			return ( None, None, )
+		where = dict(Username=username, Password=password)
+		res = self.xec.select('Users', what='GUID, SessionID', where=web.db.sqlwhere(where))
+		try:
+			res = res[0]
+		except IndexError:
+			# This guid did not exist, return the correct type
+			l.warn("Bad password match for user %s" % username)
+			return ( None, None, )
+		return (res.GUID, res.SessionID)
 	##
 	# @brief Set the session id of a user by guid
 	#
@@ -128,14 +180,13 @@ class DB:
 			return False
 		if len(session_id) != SESSION_ID_LEN:
 			l.error("session_id is not %d characters." % SESSION_ID_LEN)
-		statement = 'UPDATE Users SET SessionID = ? WHERE GUID = ?'
-		entry = ( session_id, guid, )
-		self.xec.execute(statement, entry)
+			return False
+		where = dict(GUID=guid)
+		rowcount = self.xec.update('Users', SessionID=session_id, where=web.db.sqlwhere(where))
 		# if the rowcount is 1, update succeeded
-		if self.xec.rowcount != 1:
+		if rowcount != 1:
 			l.warn("guid %s does not exist." % guid)
 			return False
-		self.con.commit()
 		return True
 
 testdb = ':memory:'
@@ -146,10 +197,10 @@ testsession = '12345678-abcd-abcd-1234-1234567890ab'
 class TestDB(unittest.TestCase):
 	def setUp(self):
 		self.db = DB(testdb)
-		self.db.xec.execute("CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID)")
-		self.db.con.commit()
+		self.db.xec.query("CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID)")
 	def tearDown(self):
-		self.db.con.close()
+		pass
+		#self.db.con.close()
 	def test_init(self):
 		# Initialization is already tested in setup
 		pass
@@ -172,25 +223,49 @@ class TestDB(unittest.TestCase):
 	def test_getUser(self):
 		guid = self.db.addUser(testuser, testpass)
 		self.assertFalse(guid is None)
-		(username, password, session_id) = self.db.getUser(guid)
+		self.assertNotEqual(self.db.getUser(testuser), ( None, None, None, ))
 	def test_getUser_neg_none(self):
-		self.assertEqual(self.db.getUser(None), ( None, None, None, ))
-	def test_getUser_neg_guidbadregex(self):
-		self.assertEqual(self.db.getUser('abcdefg'), ( None, None, None, ))
+		self.assertEqual(self.db.getUser(None), ( None, None, None ))
+	def test_getUser_neg_badstr(self):
+		self.assertEqual(self.db.getUser(''), ( None, None, None ))
 	def test_getUser_neg_notexist(self):
-		self.assertEqual(self.db.getUser(testsession), ( None, None, None, ))
+		self.assertEqual(self.db.getUser(testuser), ( None, None, None, ))
+	def test_getUserG(self):
+		guid = self.db.addUser(testuser, testpass)
+		self.assertFalse(guid is None)
+		self.assertNotEqual(self.db.getUserG(guid), ( None, None, None, ))
+	def test_getUserG_neg_none(self):
+		self.assertEqual(self.db.getUserG(None), ( None, None, None, ))
+	def test_getUserG_neg_guidbadregex(self):
+		self.assertEqual(self.db.getUserG('abcdefg'), ( None, None, None, ))
+	def test_getUserG_neg_notexist(self):
+		self.assertEqual(self.db.getUserG(testsession), ( None, None, None, ))
 	def test_clearSessionID(self):
 		guid = self.db.addUser(testuser, testpass)
 		self.assertFalse(guid is None)
 		self.assertTrue(self.db.clearSessionID(guid))
-		(username, password, session_id) = self.db.getUser(guid)
+		(username, password, session_id) = self.db.getUserG(guid)
 		self.assertNotEqual(( username, password, session_id, ), ( None, None, None, ))
 		self.assertTrue(session_id == NULL_SESSION_ID)
+	def test_getValidUser(self):
+		guid = self.db.addUser(testuser, testpass)
+		self.assertFalse(guid is None)
+		self.assertNotEqual(self.db.getValidUser(testuser, testpass), ( None, None, ))
+	def test_getValidUser_neg_usrnone(self):
+		self.assertEqual(self.db.getValidUser(None, testpass), ( None, None, ))
+	def test_getValidUser_neg_passnone(self):
+		self.assertEqual(self.db.getValidUser(testuser, None), ( None, None, ))
+	def test_getValidUser_neg_badusr(self):
+		self.assertEqual(self.db.getValidUser('1234567890abcdefghij123457890123', testpass), ( None, None, ))
+	def test_getValidUser_neg_badpass(self):
+		self.assertEqual(self.db.getValidUser(testuser, 'abcdefg'), ( None, None, ))
+	def test_getValidUser_neg_nomatch(self):
+		self.assertEqual(self.db.getValidUser(testuser, testpass), ( None, None, ))
 	def test_setSessionID(self):
 		guid = self.db.addUser(testuser, testpass)
 		self.assertFalse(guid is None)
 		self.assertTrue(self.db.setSessionID(guid, testsession))
-		(username, password, session_id) = self.db.getUser(guid)
+		(username, password, session_id) = self.db.getUserG(guid)
 		self.assertNotEqual(( username, password, session_id, ), ( None, None, None, ))
 		self.assertTrue(session_id == testsession)
 	def test_setSessionID_neg_noguid(self):
