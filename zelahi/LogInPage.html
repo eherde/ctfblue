@@ -1,71 +1,49 @@
 <!DOCTYPE html>
 <html lang = "en" background = "green">
-	<head>
-		<script src = "validateLogin.js"></script>
-		<style>
-			#login {
-				box-shadow: 0 0 2px rgba(0, 0, 0, 0.2),  
-					0 1px 1px rgba(0, 0, 0, .2),
-					0 3px 0 #fff,
-					0 4px 0 rgba(0, 0, 0, .2),
-					0 6px 0 #fff,  
-					0 7px 0 rgba(0, 0, 0, .2);
-				position: absolute;
-				z-index: 0;
+
+	<head>	
+		<!-- link to css spreadsheet -->
+		<link rel='stylesheet' type='text/css' href='loginStyleSheet.css'/>
+		<!-- links to a jQuery library which deals with all browsers that do not support HTML5 -->
+		<script src="modernizer.js">
+			if(!Modernizr.input.required || !Modernizer.input.pattern) {
+				$('form').submit(function() {
+					var validData = true;
+					$('[required],[pattern]').each(function() {
+						if(($this).attr('required') !== false && ($(this).val() == "")) {
+							$(this).focus();
+							alert("The " + $(this).attr('name') + "field is required!");
+							validData = false;
+							return false;
+						}
+						if($(this).attr('pattern')){
+							var regexp = new RegExp($this).attr('pattern'));
+							if(!regexp.test($(this).val())){
+								$(this).focus();
+								alert("The data in the " + $(this).attr('name') + " field isn't in the right format!");
+								validData = false;
+								return false;
+							}
+						}
+					});
+					return validData;
+				});	
 			}
-			
-			#login:before {
-				content: '';
-				position: absolute;
-				z-index: -1;
-				border: 1px dashed #ccc;
-				top: 5px;
-				bottom: 5px;
-				left: 5px;
-				right: 5px;
-				box-shadow: 0 0 0 1px #fff;
-			}	
-			
-			h1 {
-				text-shadow: 0 1px 0 rgba(255, 255, 255, .7), 0px 2px 0 rgba(0, 0, 0, .5);
-				text-transform: uppercase;
-				text-align: center;
-				color: #666;
-				margin: 0 0 30px 0;
-				letter-spacing: 4px;
-				font: normal 26px/1 Verdana, Helvetica;
-				position: relative;
-			}
-			
-			h1:after, before {
-				background-color: #777;
-				content: "";
-				height: 1px;
-				position:
-			}
-			
-			h1:after {
-				right: 0;
-			}
-			
-			h1:before {
-				background-image: linear-gradient(right, #777, #fff);
-				left: 0;
-			}
-		</style>
-		
+		</script>
+		<h1>Log In</h1>
 	</head>
-	
-<form id="login">
-	<h1>Log In</h1>
-    <fieldset id="inputs">
-        <input id="useremail" type="email" placeholder="user@domain.com" autofocus required>   
-        <input id="password" type="password" placeholder="Password" autocomplete="off" required>
-    </fieldset>
+
+	<body>
+		<form id="login" name="login" action="" method="post">
+		<fieldset id="inputs">
+			<input id="username" type="text" placeholder="Username" autocomplete="off" maxlength="16" pattern="[a-zA-Z0-9]{16}" autofocus required />   
+			<input id="password" type="password" placeholder="Password" autocomplete="off" maxlength="16" pattern ="[a-zA-Z0-9]{16}" required />
+		</fieldset>
     <fieldset id="actions">
-        <input type="submit" id="submit" value="Log in" action="validateLogin.js">
-        <a href="">Forgot your password?</a><a href="">Register</a>
+        <input type="submit" id="submit" value="Log In"/>
+        <a href="">Forgot your password?</a><a href="">  Register</a>
     </fieldset>
 </form>
+
 	
 </html>
