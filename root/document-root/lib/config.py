@@ -50,19 +50,11 @@ class Configurator:
 	##
 	# @return log level
 	@property
-	def lvl(self):
-		try:
-			return self._config['log']['level']
-		except:
-			return None
-	##
-	# @return log level
-	@property
 	def secret(self):
 		if self._secret is None:
 			try:
 				keyfile = self._config['secret']['file']
-			except IOError, KeyError:
+			except (IOError, KeyError):
 				return None
 			with file(keyfile) as f:
 				self._secret = f.read()

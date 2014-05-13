@@ -100,7 +100,6 @@ class DB:
 		if len(username) > USERNAME_MAX:
 			l.error("%s is greater than %d characters." % (username, USERNAME_MAX))
 			return ( None, None, None, )
-		statement = 'SELECT GUID, Password, SessionID FROM Users WHERE Username = ?'
 		where = dict(Username=username)
 		res = self.xec.select('Users', what='GUID,Password,SessionID', where=web.db.sqlwhere(where))
 		try:
@@ -123,7 +122,6 @@ class DB:
 		if not RE_UUID.match(guid):
 			l.error("%s does not match regular expression '%s'." % (guid, RE_UUID.pattern))
 			return ( None, None, None, )
-		statement = 'SELECT Username, Password, SessionID FROM Users WHERE GUID = ?'
 		where = dict(GUID=guid)
 		res = self.xec.select('Users', what='Username,Password,SessionID', where=web.db.sqlwhere(where))
 		try:
@@ -200,7 +198,6 @@ class TestDB(unittest.TestCase):
 		self.db.xec.query("CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID)")
 	def tearDown(self):
 		pass
-		#self.db.con.close()
 	def test_init(self):
 		# Initialization is already tested in setup
 		pass
