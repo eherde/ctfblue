@@ -31,6 +31,21 @@ urls = (
 COOKIE_NAME = 'ctfauth'
 COOKIE_TTL = 10
 
+def get_session_info():
+	keys = [ 'HTTP_USER_AGENT', 'HTTP_X_FORWARDED_FOR' ]
+	values = {}
+	for key in keys:
+		value = web.ctx.env.get(key, 'NO_' + key)
+		values[key] = value
+	return values
+
+def get_session_hash():
+	values = get_session_info()
+	h = hashlib.sha1()
+	for value in values:
+		h.update(value)
+	return h.hexdigest()
+
 def logon_redirect():
 	expire_cookie()
 	return web.seeother('/logon')
@@ -42,14 +57,14 @@ def create_cookie(guid, data, session):
 	# this may produce a slight variation in expiration dates between what we set
 	# and what web.py sets, but we really don't care.
 	expiration = int(time.time()) + COOKIE_TTL
-	cookie = scp.SecureCookie(guid, expiration, data, session)
+	cookie = scp.SecureCookie(guid, expiration, data, get_session_hash())
 	web.setcookie(COOKIE_NAME, cookie.value, COOKIE_TTL, secure=True, httponly=True)
 
 def logged_on():
 	cookie_data = web.cookies().get(COOKIE_NAME)
 	if cookie_data is None:
 		return False
-	return scp.is_valid(cookie_data, '')
+	return scp.is_valid(cookie_data, get_session_hash())
 
 def csrf_token():
 	if 'csrf_token' not in session:
@@ -135,6 +150,7 @@ class logon:
 			return logon_redirect()
 		create_cookie(str(db_guid), '', '')
 		return web.seeother('/')
+
 if __name__ == "__main__":
 	# run from the same directory as the service file
 	os.chdir(rootdir)
