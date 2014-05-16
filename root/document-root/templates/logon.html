@@ -58,6 +58,7 @@
 	<fieldset id="inputs">
 	<input type="text" name="username" placeholder="username" autofocus required>
 	<input type="password" name="password" placeholder="password" autocomplete="off" required>
+	<input type="hidden" name="csrf_token" value="$csrf_token()">
 	<input id="submit" type="submit" value="Submit">
 	</fieldset>
 </form>

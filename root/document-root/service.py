@@ -5,6 +5,7 @@ import hashlib
 import os
 import sys
 import time
+import uuid
 import web
 
 sys.dont_write_byte_code = True
@@ -19,7 +20,6 @@ import scp
 from log import l, exceptions
 
 configfile = os.path.join('ctf-data/ctf.yaml')
-render = web.template.render('templates/')
 sys.excepthook = exceptions
 
 urls = (
@@ -50,6 +50,24 @@ def logged_on():
 	if cookie_data is None:
 		return False
 	return scp.is_valid(cookie_data, '')
+
+def csrf_token():
+	if 'csrf_token' not in session:
+		session.csrf_token = uuid.uuid4().hex
+	return session.csrf_token
+
+def csrf_protected(f):
+	def decorated(*args, **kwargs):
+		i = web.input()
+		if 'csrf_token' not in i or i.csrf_token != session.pop('csrf_token', None):
+			raise web.HTTPError(
+					"400 Bad Request",
+					{ 'content_type': 'text/html' },
+					'''Cross Site Request Forgery detected''')
+		return f(*args, **kwargs)
+	return decorated
+
+render = web.template.render('templates/', globals={'csrf_token':csrf_token})
 
 ##
 # @brief index page
@@ -93,6 +111,7 @@ class logon:
 		l.info('GET logon')
 		expire_cookie()
 		return render.logon()
+	@csrf_protected
 	def POST(self):
 		l.info('POST logon')
 		i = web.input()
@@ -131,5 +150,7 @@ if __name__ == "__main__":
 	except IOError:
 		l.die("Failed to initialize secret key.")
 	l.info("Starting web service.")
+	web.config.debug = False
 	app = web.application(urls, globals())
+	session = web.session.Session(app, web.session.DiskStore('ctf-data/sessions'))
 	app.run()
