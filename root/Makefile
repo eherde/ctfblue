@@ -6,6 +6,7 @@ DOC_ROOT = /var/www
 LETC = /etc/lighttpd
 LCONF = $(LETC)/lighttpd.conf
 LIGHTY = /usr/sbin/lighttpd
+MODS = accesslog fastcgi ssl
 USER = www-data
 DB = $(DOC_ROOT)/ctf-data/ctf.db
 SECRET = $(DOC_ROOT)/ctf-data/ctf.aes
@@ -48,6 +49,7 @@ install: all
 	sqlite3 $(DB) < init.sql
 	openssl rand 16 -out $(SECRET)
 	chown -R $(USER):$(USER) $(DOC_ROOT)
+	lighttpd-enable-mod $(MODS) $(QUIET) || true
 	service lighttpd restart
 
 $(DB):
