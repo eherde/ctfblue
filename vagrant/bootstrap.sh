@@ -19,7 +19,6 @@ _install_packages()
 {
 	local pkgs=$(cat /vagrant/pkglist | grep -v "^#" | awk '{print $1}')
 	aptitude install --assume-yes ${pkgs}
-	aptitude install --assume-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" mysql-server
 }
 
 _install_git()
