@@ -173,7 +173,7 @@ class adduser:
 		l.info(response.is_valid)
 		if not response.is_valid:
 			l.info('false captcha')
-			return render.error(web.ctx.fullpath, 'EXISTS', 'wrong captcha value')
+			return render.error(web.ctx.fullpath, 'NOTHUMAN', 'wrong captcha value')
 		else:
 			# XXX: validate inputs
 			username = str(i['username'])

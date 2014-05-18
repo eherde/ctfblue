@@ -10,7 +10,7 @@ class RecaptchaResponse(object):
         self.error_code = error_code
 
 def displayhtml (public_key,
-                 use_ssl = False,
+                 use_ssl = True,
                  error = None):
     """Gets the HTML to display for reCAPTCHA
 
