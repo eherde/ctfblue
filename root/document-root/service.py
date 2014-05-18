@@ -21,6 +21,7 @@ import config
 import db
 import scp
 from log import l, exceptions
+import captcha
 
 ## Set the path to our configuration
 configfile = os.path.join('ctf-data/ctf.yaml')
@@ -145,10 +146,10 @@ class index:
 ##
 # @brief Interface for creating users
 class adduser:
-	##
-	# @brief creates a new user with the provided credentials
-	#
-	# @return the index page
+	def GET(self):
+		l.info('GET adduser')
+		expire_cookie()
+		return render.adduser()
 	def POST(self):
 		l.info('POST adduser')
 		i = web.input()
@@ -158,19 +159,35 @@ class adduser:
 		if 'password' not in i:
 			l.error('password field required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing password')
-		# XXX: validate inputs
-		username = str(i['username'])
-		password = str(i['password'])
-		h = hashlib.sha1()
-		# hash password
-		h.update(password)
-		# hash with salt
-		h.update(username)
-		l.debug('Creating new user %s' % username)
-		guid = web.d.addUser(username, h.hexdigest())
-		if not guid:
-			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
-		return render.index(None)
+		if 'recaptcha_challenge_field' not in i:
+			l.error('recaptcha_challenge_field required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha_challenge_field')
+		if 'recaptcha_response_field' not in i:
+			l.error('recaptcha_response_field required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'recaptcha_response_field')
+		recaptcha_challenge_field = str(i['recaptcha_challenge_field'])
+		recaptcha_response_field = str(i['recaptcha_response_field'])
+		l.info(recaptcha_challenge_field)
+		l.info(recaptcha_response_field)
+		response = captcha.submit(recaptcha_challenge_field,recaptcha_response_field,'6LdFkvMSAAAAANE5KvuYd7_7uC1H6mYZ1RZeofM0','192.168.33.235')
+		l.info(response.is_valid)
+		if not response.is_valid:
+			l.info('false captcha')
+			return render.error(web.ctx.fullpath, 'EXISTS', 'wrong captcha value')
+		else:
+			# XXX: validate inputs
+			username = str(i['username'])
+			password = str(i['password'])
+			h = hashlib.sha1()
+			# hash password
+			h.update(password)
+			# hash with salt
+			h.update(username)
+			l.debug('Creating new user %s' % username)
+			guid = web.d.addUser(username, h.hexdigest())
+			if not guid:
+				return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
+			return render.index(None)
 
 ##
 # @brief Interface for logging onto the service
