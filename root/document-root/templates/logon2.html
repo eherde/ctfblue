@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang = "en" background = "green">
+
+	<head>	
+		<!-- link to css spreadsheet -->
+		<link rel='stylesheet' type='text/css' href='loginStyleSheet.css'/>
+		<!-- links to a jQuery library which deals with all browsers that do not support HTML5 -->
+		<!-- Replace with path to these files-->
+		<script src="modernizer.js"></script> 
+		<script src="jquery.js"></script>
+		<script>
+			if(!Modernizr.input.required || !Modernizer.input.pattern) {
+				$('form').submit(function() {
+					var validData = true;
+					$('[required],[pattern]').each(function() {
+						if(($this).attr('required') !== false && ($(this).val() == "")) {
+							$(this).focus();
+							alert("The " + $(this).attr('name') + "field is required!");
+							validData = false;
+							return false;
+						}
+						if($(this).attr('pattern')){
+							var regexp = new RegExp($this).attr('pattern'));
+							if(!regexp.test($(this).val())){
+								$(this).focus();
+								alert("The data in the " + $(this).attr('name') + " field isn't in the right format!");
+								validData = false;
+								return false;
+							}
+						}
+					});
+					return validData;
+				});	
+			}
+		</script>
+		<h1>Log In</h1>
+	</head>
+
+	<body>
+		<form id="login" name="login" action="" method="post">
+		<fieldset id="inputs">
+			<input id="username" type="text" placeholder="Username" autocomplete="off" maxlength="16" pattern="[a-zA-Z0-9]{16}" autofocus required />   
+			<input id="password" type="password" placeholder="Password" autocomplete="off" maxlength="16" pattern ="[a-zA-Z0-9]{16}" required />
+			<input type="hidden" name="csrf_token" value="$csrf_token()">
+		</fieldset>
+    <fieldset id="actions">
+        <input type="submit" id="submit" value="Log In"/>
+        <a href="">Forgot your password?</a><a href="">  Register</a>
+    </fieldset>
+</form>
+
+
+</html>
