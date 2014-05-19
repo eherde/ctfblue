@@ -1,4 +1,6 @@
-function validateForm() {
+function validateLogin() {
+
+		
 	var x=documents.forms["login"]["username"].value;
 	
 	//ensure that a password and email have been entered
