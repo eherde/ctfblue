@@ -33,6 +33,7 @@ HERE += $(wildcard $(DROOT)/lib/*.py)
 HERE += $(wildcard $(DROOT)/ctf-data/*.yaml)
 HERE += $(wildcard $(DROOT)/templates/*.html)
 HERE += $(wildcard $(DROOT)/templates/*.xml)
+HERE += $(wildcard $(DROOT)/scripts/*.js)
 DIST = $(addprefix $(DOC_ROOT), $(subst $(DROOT),,$(HERE)))
 TARGETS += $(DIST)
 TARGETS += $(LCONF)
@@ -72,6 +73,10 @@ $(DOC_ROOT)/%.py: $(DROOT)/%.py
 	@# run unit tests
 	@if [ "$(shell basename $<)" != "service.py" ]; then python $<; fi
 	@cp $< $@
+
+$(DOC_ROOT)/scripts/%.js: $(DROOT)/scripts/%.js
+	@mkdir --parents $(@D)
+	cp $< $@
 
 $(DOC_ROOT)/templates/%.html: $(DROOT)/templates/%.html
 	@mkdir --parents $(@D)
