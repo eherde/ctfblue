@@ -1,0 +1,16 @@
+<!Doctype Html>
+
+<!--Script with form used to test against XSS Mitigation techniques -->
+<html>
+	<head>
+		<title>XSS Test</title>
+	</head>
+	
+	<body>
+		<form action="" method="get">
+			Username: <input type="text" name="usr_name">
+			Encryption: <keygen name="security">
+			<input type="submit">Submit
+		</form>
+	</body>
+</html>
