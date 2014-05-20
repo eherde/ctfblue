@@ -6,7 +6,7 @@
 		<link rel='stylesheet' type='text/css' href='loginStyleSheet.css'/>
 		<!-- links to a jQuery library which deals with all browsers that do not support HTML5 -->
 		<!-- Replace with path to these files-->
-		<script src="modernizer.js"></script> 
+		<script src="modernizer.js"></script> <!-- scripts/[name of script] --> 
 		<script src="jquery.js"></script>
 		<script>
 			if(!Modernizr.input.required || !Modernizer.input.pattern) {
@@ -44,7 +44,7 @@
 			<input type="hidden" name="csrf_token" value="$csrf_token()">
 		</fieldset>
     <fieldset id="actions">
-        <input type="submit" id="submit" value="Log In"/>
+        <input type="submit" id="submit" value="Log In"/ formenctype="application/x-www-form-urlencoded">
         <a href="">Forgot your password?</a><a href="">  Register</a> <!-- add in link for user registration page -->
     </fieldset>
 </form>
