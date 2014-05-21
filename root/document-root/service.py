@@ -76,13 +76,12 @@ def logon_redirect():
 def expire_cookie():
 	web.setcookie(COOKIE_NAME, '', -1)
 
-##
+#
 # @brief Create the global authentication cookie using the Secure Cookie Protocol
 #
 # @param guid The guid representing the user
 # @param data Any data we wish to store securely with the user.
-# @param session Information that should not change within a session.
-def create_cookie(guid, data, session):
+def create_cookie(guid, data):
 	# this may produce a slight variation in expiration dates between what we set
 	# and what web.py sets, but we really don't care.
 	expiration = int(time.time()) + COOKIE_TTL
@@ -159,36 +158,27 @@ class adduser:
 		if 'password' not in i:
 			l.error('password field required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing password')
-		if 'recaptcha_challenge_field' not in i:
-			l.error('recaptcha_challenge_field required for POST')
-			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha_challenge_field')
-		if 'recaptcha_response_field' not in i:
-			l.error('recaptcha_response_field required for POST')
-			return render.error(web.ctx.fullpath, 'BADREQ', 'recaptcha_response_field')
-		recaptcha_challenge_field = str(i['recaptcha_challenge_field'])
-		recaptcha_response_field = str(i['recaptcha_response_field'])
-		l.info(recaptcha_challenge_field)
-		l.info(recaptcha_response_field)
-		response = captcha.submit(recaptcha_challenge_field,recaptcha_response_field,'6LdFkvMSAAAAANE5KvuYd7_7uC1H6mYZ1RZeofM0','192.168.33.235')
-		l.info(response.is_valid)
-		if not response.is_valid:
-			l.info('false captcha')
-			return render.error(web.ctx.fullpath, 'NOTHUMAN', 'wrong captcha value')
-		else:
-			# XXX: validate inputs
-			username = str(i['username'])
-			password = str(i['password'])
-			h = hashlib.sha1()
-			# hash password
-			h.update(password)
-			# hash with salt
-			h.update(username)
-			l.debug('Creating new user %s' % username)
-			guid = web.d.addUser(username, h.hexdigest())
-			if not guid:
-				return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
-			return render.index(None)
-
+		if 'password2' not in i:
+			l.error('password2 field required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing password2')
+		# XXX: validate inputs
+		username = str(i['username'])
+		password = str(i['password'])
+		password2 = str(i['password2'])
+		if password != password2:
+			l.warn("passwords don't match. not creating user.")
+			return render.error(web.ctx.fullpath, 'BADREQ', 'password mismatch')
+		h = hashlib.sha1()
+		# hash password
+		h.update(password)
+		# hash with salt
+		h.update(username)
+		l.debug('Creating new user %s' % username)
+		guid = web.d.addUser(username, h.hexdigest())
+		if not guid:
+			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
+		create_cookie(str(guid), '')
+		return render.index(None)
 ##
 # @brief Interface for logging onto the service
 class logon:
