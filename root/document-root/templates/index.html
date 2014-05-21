@@ -1,5 +1,7 @@
-$def with (name)
-$if name:
-	Welcome Back!
-$else:
-	Welcome!
+$def with (books)
+
+$for book in books:
+	$book.Name $$$book.Price
+	<form name="buy" method="POST">
+		<input type="submit" name="$book.Name" value="Buy">
+	</form>

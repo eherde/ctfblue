@@ -87,6 +87,8 @@ class DB:
 	# @return True or False
 	def clearSessionID(self, args):
 		return self.setSessionID(args, NULL_SESSION_ID)
+	def getBooks(self):
+		return self.xec.select('Books', what='*')
 	##
 	# @brief Get entries associated with a user by username
 	#
@@ -196,6 +198,8 @@ class TestDB(unittest.TestCase):
 	def setUp(self):
 		self.db = DB(testdb)
 		self.db.xec.query("CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID)")
+		self.db.xec.query("CREATE TABLE Books(Name, Price)")
+		self.db.xec.query('INSERT INTO Books VALUES ("Secure Electronic Commerce", 27.50)')
 	def tearDown(self):
 		pass
 	def test_init(self):
@@ -217,6 +221,9 @@ class TestDB(unittest.TestCase):
 	def test_addUser_neg_userexists(self):
 		self.assertNotEqual(self.db.addUser(testuser, testpass), None)
 		self.assertEqual(self.db.addUser(testuser, testpass), None)
+	def test_getBooks(self):
+		res = self.db.getBooks()
+		self.assertFalse(res is None)
 	def test_getUser(self):
 		guid = self.db.addUser(testuser, testpass)
 		self.assertFalse(guid is None)

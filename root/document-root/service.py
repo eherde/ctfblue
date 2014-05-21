@@ -140,7 +140,8 @@ class index:
 		l.info('GET index')
 		if not logged_on():
 			return logon_redirect()
-		return render.index(None)
+		books = web.d.getBooks()
+		return render.index(books)
 
 ##
 # @brief Interface for creating users
@@ -178,7 +179,7 @@ class adduser:
 		if not guid:
 			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
 		create_cookie(str(guid), '')
-		return render.index(None)
+		return web.seeother('/')
 ##
 # @brief Interface for logging onto the service
 class logon:
@@ -217,7 +218,7 @@ class logon:
 		if not db_guid:
 			# invalid credentials
 			return logon_redirect()
-		create_cookie(str(db_guid), '', '')
+		create_cookie(str(db_guid), '')
 		return web.seeother('/')
 
 if __name__ == "__main__":
