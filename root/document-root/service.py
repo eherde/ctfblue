@@ -33,13 +33,14 @@ urls = (
 	'/', 'index',
 	'/adduser', 'adduser',
 	'/logon', 'logon',
-	'/checkout', 'checkout'
+	'/checkout', 'checkout',
+	'/purchase', 'purchase',
 )
 
 ## Name of authorization cookie
 COOKIE_NAME = 'ctfauth'
 ## Cookie expiration time, in seconds
-COOKIE_TTL = 10
+COOKIE_TTL = 100
 
 ##
 # @brief get information specific to this session.
@@ -238,6 +239,28 @@ class checkout():
 			return web.seeother('/')
 		book = i['book']
 		return render.checkout(book)
+class purchase():
+	def GET(self):
+		l.info('GET purchase')
+		web.seeother('/')
+	@csrf_protected
+	def POST(self):
+		l.info('POST purchase')
+		if not logged_on():
+			return logon_redirect()
+		i = web.input()
+		if  'name' not in i:
+			l.error('name required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing name')
+		if 'card' not in i:
+			l.error('card required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing card')
+		if 'ccv' not in i:
+			l.error('ccv required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing ccv')
+		book = 'foo'
+		return render.purchase(book)
+
 if __name__ == "__main__":
 	# run from the same directory as the service file
 	os.chdir(rootdir)
