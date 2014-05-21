@@ -1,0 +1,18 @@
+$def with (book)
+<!DOCTYPE html>
+<html lang = "en" background = "green">
+<head>
+<h1>Checkout</h1>
+</head>
+<body>
+	You are about to buy $book.
+	Please enter your Billing information.
+	<form action="purchase" method="POST">
+		<input type=text name="name" placeholder="Name" pattern="[a-zA-Z]+" autofocus required/>
+		<input type=password name="card" placeholder="Credit Card #" pattern="[0-9]{16}" required/>
+		<input type=password name="ccv" placeholder="CCV" patter='[0-9]{3}' required/>
+		<input type=hidden name="csrf_token" value="$csrf_token()"/>
+		<input type=submit value="Buy">
+	</form>
+</body>
+</html>

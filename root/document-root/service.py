@@ -32,7 +32,8 @@ sys.excepthook = exceptions
 urls = (
 	'/', 'index',
 	'/adduser', 'adduser',
-	'/logon', 'logon'
+	'/logon', 'logon',
+	'/checkout', 'checkout'
 )
 
 ## Name of authorization cookie
@@ -141,6 +142,7 @@ class index:
 		if not logged_on():
 			return logon_redirect()
 		books = web.d.getBooks()
+		l.debug('GET index done')
 		return render.index(books)
 
 ##
@@ -221,6 +223,21 @@ class logon:
 		create_cookie(str(db_guid), '')
 		return web.seeother('/')
 
+class checkout():
+	def GET(self):
+		l.info('GET checkout')
+		web.seeother('/')
+	@csrf_protected
+	def POST(self):
+		l.info('POST checkout')
+		if not logged_on():
+			return logon_redirect()
+		i = web.input()
+		if 'book' not in i:
+			l.error('book required for POST')
+			return web.seeother('/')
+		book = i['book']
+		return render.checkout(book)
 if __name__ == "__main__":
 	# run from the same directory as the service file
 	os.chdir(rootdir)
