@@ -8,31 +8,6 @@
 		<!-- Replace with path to these files-->
 		<script src="modernizer.js"></script> <!-- scripts/[name of script] --> 
 		<script src="jquery.js"></script>
-		<script>
-			if(!Modernizr.input.required || !Modernizer.input.pattern) {
-				$('form').submit(function() {
-					var validData = true;
-					$('[required],[pattern]').each(function() {
-						if(($this).attr('required') !== false && ($(this).val() == "")) {
-							$(this).focus();
-							alert("The " + $(this).attr('name') + "field is required!");
-							validData = false;
-							return false;
-						}
-						if($(this).attr('pattern')){
-							var regexp = new RegExp($this).attr('pattern'));
-							if(!regexp.test($(this).val())){
-								$(this).focus();
-								alert("The data in the " + $(this).attr('name') + " field isn't in the right format!");
-								validData = false;
-								return false;
-							}
-						}
-					});
-					return validData;
-				});	
-			}
-		</script>
 		<h1>Log In</h1>
 	</head>
 
