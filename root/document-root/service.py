@@ -31,7 +31,7 @@ sys.excepthook = exceptions
 urls = (
 	'/', 'index',
 	'/adduser', 'adduser',
-	'/logon', 'logon'
+	'/logon', 'logon', 'Bookpage'
 )
 
 ## Name of authorization cookie
@@ -232,3 +232,19 @@ if __name__ == "__main__":
 	app = web.application(urls, globals())
 	session = web.session.Session(app, web.session.DiskStore('ctf-data/sessions'))
 	app.run()
+
+class BookPage:
+	def GET(self):#not sure if this is proper placement
+	return render.BookPage	
+
+	
+	return ConfPage()
+
+#start new class for confirmation page:
+#update cookie upon submission
+#display cookie cart contents
+#allow for credit card input
+
+class ConfPage:
+
+

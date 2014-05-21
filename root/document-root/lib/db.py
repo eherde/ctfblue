@@ -275,6 +275,8 @@ class TestDB(unittest.TestCase):
 		self.assertFalse(self.db.setSessionID(testsession, 'abcdefg123456'))
 	def test_setSessionID_neg_guidnotexist(self):
 		self.assertFalse(self.db.setSessionID(testsession, testsession))
+	def getBook (self, Name)
+		res = self.xec.select('Books' what='Values')
 
 if __name__ == '__main__':
 	import logging
