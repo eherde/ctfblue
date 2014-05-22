@@ -9,6 +9,7 @@ import sys
 import time
 import uuid
 import web
+from recaptcha.client import captcha
 
 ## The directory where the project is run from
 rootdir = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -146,13 +147,15 @@ class index:
 		l.debug('GET index done')
 		return render.index(books)
 
+
 ##
 # @brief Interface for creating users
 class adduser:
 	def GET(self):
 		l.info('GET adduser')
 		expire_cookie()
-		return render.adduser()
+		cap = captcha.displayhtml(web.captcha_public_key, use_ssl=True, error="Something broke.")
+		return render.adduser(cap)
 	def POST(self):
 		l.info('POST adduser')
 		i = web.input()
@@ -165,6 +168,12 @@ class adduser:
 		if 'password2' not in i:
 			l.error('password2 field required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing password2')
+		if 'recaptcha_challenge_field' not in i:
+			l.error('recaptcha_challenge_field required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha challenge')
+		if 'recaptcha_response_field' not in i:
+			l.error('recaptcha_response_field required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha response')
 		# XXX: validate inputs
 		username = str(i['username'])
 		password = str(i['password'])
@@ -172,6 +181,15 @@ class adduser:
 		if password != password2:
 			l.warn("passwords don't match. not creating user.")
 			return render.error(web.ctx.fullpath, 'BADREQ', 'password mismatch')
+		challenge = i['recaptcha_challenge_field']
+		response = i['recaptcha_response_field']
+		result = captcha.submit(challenge, response, web.captcha_private_key, web.ctx.ip)
+		if result.error_code:
+			l.warn('error validating captcha: %s' % result.error_code)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'bad captcha: %s' % result.error_code)
+		if not result.is_valid:
+			l.warn('invalid captcha')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'bad captcha')
 		h = hashlib.sha1()
 		# hash password
 		h.update(password)

@@ -1,3 +1,4 @@
+$def with (captcha)
 <!DOCTYPE html>
 <html lang = "en" background = "green">
 <head>
@@ -7,11 +8,12 @@
 	Username and Password must be alphanumeric strings between 4 and 16 characters long.
 	<form id="login" action="adduser" method="POST">
 	<fieldset id="inputs">
-		<input type="text" name="username" placeholder="username" autocomplete="off" maxlength="16" autofocus required pattern="[a-zA-z0-9]{4,16}">
-		<input type="password" name="password" placeholder="password" autocomplete="off" maxlength="16" required pattern="[a-zA-Z0-9]{4,16}">
-		<input type="password" name="password2" placeholder="password" autocomplete="off" maxlength="16" required pattern="[a-zA-Z0-9]{4,16}" onchange="form.password2.pattern = this.value;">
-		<input id="submit" type="submit" value="Submit">
+		<input type="text" name="username" placeholder="username" autocomplete="off" maxlength="16" autofocus required pattern="[a-zA-z0-9]{4,16}"><br>
+		<input type="password" name="password" placeholder="password" autocomplete="off" maxlength="16" required pattern="[a-zA-Z0-9]{4,16}"><br>
+		<input type="password" name="password2" placeholder="password" autocomplete="off" maxlength="16" required pattern="[a-zA-Z0-9]{4,16}"><br>
 	</fieldset>
+	$:captcha
+	<input id="submit" type="submit" value="Submit">
 	</form>
 </body>
 </html>
