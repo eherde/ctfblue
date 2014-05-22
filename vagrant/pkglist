@@ -13,8 +13,9 @@ vim
 ### frameworks
 lighttpd
 python
+# libs
+libssl-dev
 python-crypto
 python-webpy
 python-yaml
-# libs
-libssl-dev
+python-recaptcha
