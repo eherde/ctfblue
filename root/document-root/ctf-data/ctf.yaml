@@ -5,3 +5,6 @@ db:
         file: ctf-data/ctf.db
 secret:
         file: ctf-data/ctf.aes
+captcha:
+        private: ctf-data/captcha
+        public: ctf-data/captcha.pub

@@ -275,6 +275,12 @@ if __name__ == "__main__":
 		scp.secret_key = c.secret
 	except IOError:
 		l.die("Failed to initialize secret key.")
+	web.captcha_public_key = c.captcha_public_key
+	web.captcha_private_key = c.captcha_private_key
+	if not web.captcha_public_key:
+		l.critical("SECURITY ERROR: Could not get captcha public key")
+	if not web.captcha_private_key:
+		l.critical("SECURITY ERROR: Could not get captcha private key")
 	l.info("Starting web service.")
 	web.config.debug = False
 	app = web.application(urls, globals())

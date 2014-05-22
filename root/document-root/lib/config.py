@@ -59,6 +59,24 @@ class Configurator:
 			with file(keyfile) as f:
 				self._secret = f.read()
 		return self._secret
+	@property
+	def captcha_public_key(self):
+		path = self._config['captcha']['public']
+		try:
+			with file(path) as f:
+					self._captcha_public_key = f.read()
+		except IOError:
+			return None
+		return self._captcha_public_key
+	@property
+	def captcha_private_key(self):
+		path = self._config['captcha']['private']
+		try:
+			with file(path) as f:
+				self._captcha_private_key = f.read()
+		except IOError:
+			return None
+		return self._captcha_private_key
 
 class TestConfigurator(unittest.TestCase):
 	def test_init(self):
