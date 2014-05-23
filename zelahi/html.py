@@ -33,7 +33,7 @@ class Xssfilter(HTMLParser):
 	# @param self create a new dictionary to store attributes
 	#
 	# @ return a new Xssfilter object	
-	def __init__(self, fmt = AbstractFormatter):  //
+	def __init__(self, fmt = AbstractFormatter):
 		#initialize the base class
 		HTMLParser.__init__(self, fmt)
 		#Create a dictionary to hold variable tags that are allowed and disallowed
@@ -45,12 +45,12 @@ class Xssfilter(HTMLParser):
 		self.requires_no_close = ['img','br','html']
 	##	
 	# @brief: escapes the data and removes unwanted HTML tags
-	def escapeData(self,data): //
+	def escapeData(self,data): 
 		if data:
 			self.result += xssEscape(data)
 	##		
 	# @brief: handles any character references
-	def handleCharRef(self, ref): //
+	def handleCharRef(self, ref): 
 		if len(ref) < 7 and ref.isdigit():
 			self.result += '&#%s' % ref
 		else:
@@ -59,7 +59,7 @@ class Xssfilter(HTMLParser):
 	# @brief handles any entity references 
 	#
 	# @param ref: a reference object
-	def handleEntityRef(self, ref): //
+	def handleEntityRef(self, ref): 
 		if ref in entitydefs:
 			self.result += '&%s:' % ref
 		else:
@@ -68,7 +68,7 @@ class Xssfilter(HTMLParser):
 	# @brief comments out any input that may be malicious
 	#
 	# @param comment: comments passed into the function
-	def handleComment(self, comment):  //
+	def handleComment(self, comment):
 		if comment:
 			self.result +=("<!--%s-->" % comment)
 	##		
@@ -121,7 +121,7 @@ class Xssfilter(HTMLParser):
 	# @brief Ensures that URLs passed are safe
 	#
 	# @param url: URL passed into the server
-	def urlIsAcceptable(self, url): //
+	def urlIsAcceptable(self, url):
 		parsed = urlparse(url)
 		return parsed[0] in self.allowed_schemes and '.' in parsed[1]
 	##
