@@ -1,4 +1,7 @@
-$def with (books)
+$def with (user, books)
+
+$if user:
+	Welcome $user!<br><br>
 
 $for book in books:
 	$book.Name $$$book.Price

@@ -45,9 +45,6 @@ DATA_FMT = '256s'
 SESS_FMT = '36s'
 DGST_FMT = '20s'
 
-# Secret key contents
-secret_key = None
-
 ##
 # @brief convenience wrapper for turning arbitrary data into readable hex
 #
@@ -131,7 +128,7 @@ def decrypt(msg, key, iv):
 #
 # @return  True or False
 def is_valid(cookie_data, session):
-	if not secret_key:
+	if not secret:
 		l.error("Cannot validate cookie. Secret key uninitialized.")
 	unpacked = struct.unpack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT, cookie_data)
 	if len(unpacked) != 4:
@@ -140,7 +137,7 @@ def is_valid(cookie_data, session):
 	exp = unpacked[1]
 	ciphertext = unpacked[2]
 	hashed_data = unpacked[3]
-	hash_key = hashk(user, exp, secret_key)
+	hash_key = hashk(user, exp, secret)
 	# we need a way to consistently create the initialization vector.
 	# we can simply hash the session key to get deterministic output
 	s = hashlib.sha1()
@@ -153,9 +150,59 @@ def is_valid(cookie_data, session):
 	else:
 		return False
 
+class SecureCookie:
+	def __init__(self, session, secret):
+		s = hashlib.sha1()
+		s.update(session)
+		self._session = session
+		self._secret = secret
+		self._ivec = s.digest()[:16]
+	def serialize(self, user, expiration, data):
+		key = hashk(user, expiration, self._secret)
+		mac = hashd(user, expiration, data, self._session, str(key))
+		ciphertext = encrypt(data.ljust(256, '\0'), str(key)[:16], self._ivec)
+		return struct.pack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT,
+				user, expiration, ciphertext, mac)
+	def deserialize(self, cookie):
+		unpacked = struct.unpack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT, cookie)
+		if len(unpacked) != 4:
+			l.error("Failed to unpack cookie data.")
+		user = unpacked[0]
+		expiration = unpacked[1]
+		ciphertext = unpacked[2]
+		mac = unpacked[3]
+		return (user.rstrip('\0'), expiration, ciphertext.rstrip('\0'), mac)
+	def getExpiration(self, cookie):
+		(user, expiration, ciphertext, mac) = self.deserialize(cookie)
+		return expiration
+	def setExpiration(self, cookie, expiration):
+		if not self.isValid(cookie):
+			l.warn("SECURITY ALERT: Setting expiration on invalid cookie.")
+		(user, _, ciphertext, _) = self.deserialize(cookie)
+		plaintext = self.getData(cookie)
+		return self.serialize(user, expiration, plaintext)
+	def getData(self, cookie):
+		(user, expiration, ciphertext, mac) = self.deserialize(cookie)
+		key = hashk(user, expiration, self._secret)
+		plaintext = decrypt(ciphertext.ljust(256, '\0'), str(key)[:16], self._ivec)
+		return plaintext.rstrip('\0')
+	def setData(self, cookie, data):
+		if not self.isValid(cookie):
+			l.warn("SECURITY ALERT: Setting data on invalid cookie.")
+		(user, expiration, _, _) = self.deserialize(cookie)
+		return self.serialize(user, expiration, data)
+	def isValid(self, cookie):
+		(user, expiration, ciphertext, mac) = self.deserialize(cookie)
+		key = hashk(user, expiration, self._secret)
+		plaintext = decrypt(ciphertext.ljust(256, '\0'), str(key)[:16], self._ivec)
+		vmac = hashd(user, expiration, plaintext, self._session, str(key))
+		if mac == vmac:
+			return True
+		return False
+
 ##
 # @brief Implementation of Secure Cookie Protocol
-class SecureCookie:
+#class SecureCookie:
 	##
 	# @brief Initialize packed cookie data
 	#
@@ -165,38 +212,101 @@ class SecureCookie:
 	# @param session SSL session ID (public)
 	#
 	# @return a Secure Cookie object suitable for passing to the client
-	def __init__(self, user, exp, data, session):
-		if not secret_key:
-			l.error("Failed to instantiate %s: "
-					"No secret key initialized."
-					% self.__class__.__name__)
-			return None
-		hash_key = hashk(user, exp, secret_key)
-		hashed_data = hashd(user, exp, data, session, str(hash_key))
-		# we need a way to consistently create the initialization vector.
-		# we can simply hash the session key to get deterministic output
-		s = hashlib.sha1()
-		s.update(str(session))
-		i_vec = s.digest()[:16]
-		ciphertext = encrypt(data.ljust(256, '\0'), str(hash_key)[:16], i_vec)
-		self.value = struct.pack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT,
-				user, exp, ciphertext, hashed_data)
+#	def __init__(self, user, exp, data, session):
+#		if not secret_key:
+#			l.error("Failed to instantiate %s: "
+#					"No secret key initialized."
+#					% self.__class__.__name__)
+#			return None
+#		hash_key = hashk(user, exp, secret_key)
+#		hashed_data = hashd(user, exp, data, session, str(hash_key))
+#		# we need a way to consistently create the initialization vector.
+#		# we can simply hash the session key to get deterministic output
+#		s = hashlib.sha1()
+#		s.update(str(session))
+#		i_vec = s.digest()[:16]
+#		ciphertext = encrypt(data.ljust(256, '\0'), str(hash_key)[:16], i_vec)
+#		self.cookie = struct.pack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT,
+#				user, exp, ciphertext, hashed_data)
+#		self._user = user
+#		self._expiration = exp
+#		self._ciphertext = ciphertext
+#		self._i_vec = i_vec
+#	@property
+#	def user(self):
+#		return self._user
+#	@property
+#	def data(self):
+#		hash_key = hashk(self._user, self._expiration, secret_key)
+#		plaintext = decrypt(self._ciphertext, str(hash_key)[:16], self._i_vec)
+#		return plaintext
+
 # Values for testing
 TEST_USER = 'mytestuser'
 TEST_EXPIRATION = int(time.time())
 TEST_DATA = 'mytestdata'
-TEST_SESSION = '12345678-1234-1234-1234-1234567890ab'
+TEST_SESSION = '123456789009876543211234567890'
 
 class TestSecureCookie(unittest.TestCase):
 	def setUp(self):
-		global secret_key
-		secret_key = os.urandom(16)
+		self.secret = os.urandom(16)
 	def test_init(self):
-		self.assertTrue(SecureCookie(TEST_USER, TEST_EXPIRATION, TEST_DATA, TEST_SESSION))
-	def test_verify(self):
-		cookie = SecureCookie(TEST_USER, TEST_EXPIRATION, TEST_DATA, TEST_SESSION)
-		self.assertTrue(cookie)
-		self.assertTrue(is_valid(cookie.value, TEST_SESSION))
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		self.assertFalse(c._session is None)
+		self.assertFalse(c._secret is None)
+		self.assertFalse(c._ivec is None)
+	def test_serialize(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+	def test_deserialize(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+		d = c.deserialize(s)
+		self.assertEqual(( TEST_USER, TEST_EXPIRATION, ), ( d[0], d[1], ))
+	def test_getData(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+		d = c.getData(s)
+		self.assertEqual(TEST_DATA, d)
+	def test_setData(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+		s2 = c.setData(s, TEST_DATA + 'more')
+		self.assertFalse(s2 is None)
+		d = c.getData(s2)
+		self.assertEqual(d, TEST_DATA + 'more')
+	def test_getExpiration(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+		e = c.getExpiration(s)
+		self.assertEqual(TEST_EXPIRATION, e)
+	def test_setExpiration(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+		s2 = c.setExpiration(s, TEST_EXPIRATION + 1)
+		self.assertFalse(s2 is None)
+		e = c.getExpiration(s2)
+		self.assertTrue(e, TEST_EXPIRATION + 1)
+	def test_isValid(self):
+		c = SecureCookie(TEST_SESSION, self.secret)
+		self.assertFalse(c is None)
+		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
+		self.assertFalse(s is None)
+		self.assertTrue(c.isValid(s))
+
 
 if __name__ == "__main__":
 	# run from the same directory as the module

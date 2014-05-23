@@ -88,18 +88,19 @@ def create_cookie(guid, data):
 	# this may produce a slight variation in expiration dates between what we set
 	# and what web.py sets, but we really don't care.
 	expiration = int(time.time()) + COOKIE_TTL
-	cookie = scp.SecureCookie(guid, expiration, data, get_session_hash())
-	web.setcookie(COOKIE_NAME, cookie.value, COOKIE_TTL, secure=True, httponly=True)
+	session.cookie = scp.SecureCookie(get_session_hash(), web.secret)
+	serial = session.cookie.serialize(guid, int(time.time()) + COOKIE_TTL, data)
+	web.setcookie(COOKIE_NAME, serial, COOKIE_TTL, secure=True, httponly=True)
 
 ##
 # @brief Determine whether the user is logged onto the system
 #
 # @return True or False
 def logged_on():
-	cookie_data = web.cookies().get(COOKIE_NAME)
-	if cookie_data is None:
+	cookie = web.cookies().get(COOKIE_NAME)
+	if cookie is None:
 		return False
-	return scp.is_valid(cookie_data, get_session_hash())
+	return session.cookie.isValid(cookie)
 
 ##
 # @brief Get the global csrf token, creating it if it does not exist
@@ -144,8 +145,9 @@ class index:
 		if not logged_on():
 			return logon_redirect()
 		books = web.d.getBooks()
-		l.debug('GET index done')
-		return render.index(books)
+		serial = cookie = web.cookies().get(COOKIE_NAME)
+		user = session.cookie.getData(serial)
+		return render.index(user, books)
 
 
 ##
@@ -199,7 +201,7 @@ class adduser:
 		guid = web.d.addUser(username, h.hexdigest())
 		if not guid:
 			return render.error(web.ctx.fullpath, 'EXISTS', 'username exists')
-		create_cookie(str(guid), '')
+		create_cookie(str(guid), username)
 		return web.seeother('/')
 ##
 # @brief Interface for logging onto the service
@@ -239,7 +241,7 @@ class logon:
 		if not db_guid:
 			# invalid credentials
 			return logon_redirect()
-		create_cookie(str(db_guid), '')
+		create_cookie(str(db_guid), username)
 		return web.seeother('/')
 
 class checkout():
@@ -290,7 +292,7 @@ if __name__ == "__main__":
 	except IOError:
 		l.die("Failed to initialize database.")
 	try:
-		scp.secret_key = c.secret
+		web.secret = c.secret
 	except IOError:
 		l.die("Failed to initialize secret key.")
 	web.captcha_public_key = c.captcha_public_key
