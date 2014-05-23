@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
-from html.parser import HTMLParser
+from htmllib import HTMLParser
 from cgi import escape
-from urllib.parse import urlparse
+from urlparse import urlparse
 from formatter import AbstractFormatter
-from html.entities import entitydefs
+from htmlentitydefs import entitydefs
 from xml.sax.saxutils import quoteattr
 
 #Removes <,>,&,:","
