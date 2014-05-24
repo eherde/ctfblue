@@ -181,6 +181,8 @@ class SecureCookie:
 		ciphertext = encrypt(data.ljust(256, '\0'), str(hash_key)[:16], i_vec)
 		self.value = struct.pack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT,
 				user, exp, ciphertext, hashed_data)
+
+		
 # Values for testing
 TEST_USER = 'mytestuser'
 TEST_EXPIRATION = int(time.time())
@@ -197,6 +199,10 @@ class TestSecureCookie(unittest.TestCase):
 		cookie = SecureCookie(TEST_USER, TEST_EXPIRATION, TEST_DATA, TEST_SESSION)
 		self.assertTrue(cookie)
 		self.assertTrue(is_valid(cookie.value, TEST_SESSION))
+	def update (self, data):
+		data = "testbook"
+		print data
+		self.assertTrue(cookie, data)
 
 if __name__ == "__main__":
 	# run from the same directory as the module

@@ -141,6 +141,9 @@ class index:
 		if not logged_on():
 			return logon_redirect()
 		return render.index(None)
+# creates count variable for login lockout.  Each login failure will incrment this var, @ 5 will lock out.
+
+count = 0
 
 ##
 # @brief Interface for creating users
@@ -209,9 +212,27 @@ class logon:
 		(db_guid, db_session) = web.d.getValidUser(username, h.hexdigest())
 		if not db_guid:
 			# invalid credentials
+			# increment count and check if lockout is needed
+			count = count + 1
+			if(count == 5)
+				return lockout()
 			return logon_redirect()
 		create_cookie(str(db_guid), '', '')
 		return web.seeother('/')
+
+		def POST(self):
+		  i= web.input()
+
+	          # XXX: validate inputs
+		  username = str(i['username'])
+		  password = str(i['password'])
+		  h = hashlib.sha1()
+		  # hash password
+		  h.update(password)
+		  # hash with salt
+		  h.update(username)
+		  l.error('Too many failed attempts. You are now locked out.')
+			return render.error(web.ctx.fullpath 'BADREQ','lockout')
 
 if __name__ == "__main__":
 	# run from the same directory as the service file
@@ -233,18 +254,6 @@ if __name__ == "__main__":
 	session = web.session.Session(app, web.session.DiskStore('ctf-data/sessions'))
 	app.run()
 
-class BookPage:
-	def GET(self):#not sure if this is proper placement
-	return render.BookPage	
 
-	
-	return ConfPage()
-
-#start new class for confirmation page:
-#update cookie upon submission
-#display cookie cart contents
-#allow for credit card input
-
-class ConfPage:
 
 
