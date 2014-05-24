@@ -111,7 +111,7 @@ class DB:
 	##
 	# @brief Get entries associated with a user by username
 	#
-	# @param usernam 32 character max string
+	# @param username 32 character max string
 	#
 	# @return tuple (Username, Password, SessionID)
 	def getUser(self, username):
