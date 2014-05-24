@@ -127,6 +127,7 @@ def csrf_protected(f):
 	def decorated(*args, **kwargs):
 		i = web.input()
 		if 'csrf_token' not in i or i.csrf_token != session.pop('csrf_token', None):
+			expire_cookie()
 			raise web.HTTPError(
 					"400 Bad Request",
 					{ 'content_type': 'text/html' },
