@@ -281,7 +281,9 @@ class checkout():
 			l.error('book required for POST')
 			return web.seeother('/')
 		book = i['book']
-		return render.checkout(book)
+		serial = web.cookies().get(COOKIE_NAME)
+		user = session.cookie.getData(serial)
+		return render.checkout(user, book)
 
 ##
 # @brief purchase page
@@ -317,6 +319,12 @@ class purchase():
 		if 'ccv' not in i:
 			l.error('ccv required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing ccv')
+		if 'expmonth' not in i:
+			l.error('expmonth required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing expmonth')
+		if 'expyear' not in i:
+			l.error('expyear required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing expyear')
 		book = 'foo'
 		return render.purchase(book)
 
