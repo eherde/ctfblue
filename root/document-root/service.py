@@ -5,6 +5,7 @@
 # system modules
 import hashlib
 import os
+import re
 import sys
 import time
 import uuid
@@ -37,6 +38,12 @@ urls = (
 	'/checkout', 'checkout',
 	'/purchase', 'purchase',
 )
+
+RE_USERNAME = re.compile('^\w+$')
+RE_PASSWORD = re.compile('^\w+$')
+RE_CAPTCHA  = re.compile('^\w+$')
+RE_CARDNO   = re.compile('^\d{16}$')
+RE_NAME     = re.compile('^[a-zA-Z ]+$')
 
 ## Name of authorization cookie
 COOKIE_NAME = 'ctfauth'
@@ -185,10 +192,10 @@ class adduser:
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing password2')
 		if 'recaptcha_challenge_field' not in i:
 			l.error('recaptcha_challenge_field required for POST')
-			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha challenge')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha_challenge_field')
 		if 'recaptcha_response_field' not in i:
 			l.error('recaptcha_response_field required for POST')
-			return render.error(web.ctx.fullpath, 'BADREQ', 'missing recaptcha response')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing_recaptcha_response_field')
 		# XXX: validate inputs
 		username = str(i['username'])
 		password = str(i['password'])
@@ -196,6 +203,12 @@ class adduser:
 		if password != password2:
 			l.warn("passwords don't match. not creating user.")
 			return render.error(web.ctx.fullpath, 'BADREQ', 'password mismatch')
+		if not RE_USERNAME.match(username):
+			l.warn('username does not match %s' % RE_USERNAME.pattern)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'malformed username')
+		if not RE_PASSWORD.match(password):
+			l.warn('password does not match %s' % RE_PASSWORD.pattern)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'malformed password')
 		challenge = i['recaptcha_challenge_field']
 		response = i['recaptcha_response_field']
 		result = captcha.submit(challenge, response, web.captcha_private_key, web.ctx.ip)
@@ -245,6 +258,12 @@ class logon:
 		# XXX: validate inputs
 		username = str(i['username'])
 		password = str(i['password'])
+		if not RE_USERNAME.match(username):
+			l.warn('username does not match %s' % RE_USERNAME.pattern)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'malformed username')
+		if not RE_PASSWORD.match(password):
+			l.warn('password does not match %s' % RE_PASSWORD.pattern)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'malformed password')
 		h = hashlib.sha1()
 		# hash password
 		h.update(password)
@@ -349,6 +368,12 @@ class purchase():
 		name = i['name']
 		card = i['card']
 		book = i['book']
+		if not RE_NAME.match(name):
+			l.warn('name does not match %s' % RE_NAME.pattern)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'malformed name')
+		if not RE_CARDNO.match(card):
+			l.warn('name does not match %s' % RE_CARDNO.pattern)
+			return render.error(web.ctx.fullpath, 'BADREQ', 'malformed card')
 		price = web.d.getPrice(book)
 		l.critical("getting cookie")
 		serial = web.cookies().get(COOKIE_NAME)
