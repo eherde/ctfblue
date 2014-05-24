@@ -150,19 +150,43 @@ def is_valid(cookie_data, session):
 	else:
 		return False
 
+##
+# @brief Secure Cookie implementation
 class SecureCookie:
+	##
+	# @brief initialize a cookie that is unique per session
+	#
+	# @param session unique identifying information about the session (public)
+	# @param secret secret key uses for encrypting all cookies
+	#
+	# @return SecureCookie object
 	def __init__(self, session, secret):
 		s = hashlib.sha1()
 		s.update(session)
 		self._session = session
 		self._secret = secret
 		self._ivec = s.digest()[:16]
+	##
+	# @brief convert inputs to a packed data structure suiteable for
+	# passing to the client
+	#
+	# @param user any tag that identifies the owner of the data (public)
+	# @param expiration time at which the cookie has expired (public)
+	# @param data any data we wish to store with the client (private)
+	#
+	# @return stream that can be used to set a client cookie
 	def serialize(self, user, expiration, data):
 		key = hashk(user, expiration, self._secret)
 		mac = hashd(user, expiration, data, self._session, str(key))
 		ciphertext = encrypt(data.ljust(256, '\0'), str(key)[:16], self._ivec)
 		return struct.pack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT,
 				user, expiration, ciphertext, mac)
+	##
+	# @brief convert a cookie stream into it's individual components
+	#
+	# @param cookie cookie stream created by serialize()
+	#
+	# @return (user, expiration, encrypted data, mac)
 	def deserialize(self, cookie):
 		unpacked = struct.unpack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT, cookie)
 		if len(unpacked) != 4:
@@ -172,25 +196,57 @@ class SecureCookie:
 		ciphertext = unpacked[2]
 		mac = unpacked[3]
 		return (user.rstrip('\0'), expiration, ciphertext.rstrip('\0'), mac)
+	##
+	# @brief get the expiration time of a cookie
+	#
+	# @param cookie cookie stream created by serialize()
+	#
+	# @return expiration time integer
 	def getExpiration(self, cookie):
 		(user, expiration, ciphertext, mac) = self.deserialize(cookie)
 		return expiration
+	##
+	# @brief set the expiration time of a cookie
+	#
+	# @param cookie the original cookie stream created by serialize()
+	# @param expiration the new expiration time
+	#
+	# @return serialized cookie stream with updated expiration
 	def setExpiration(self, cookie, expiration):
 		if not self.isValid(cookie):
 			l.warn("SECURITY ALERT: Setting expiration on invalid cookie.")
 		(user, _, ciphertext, _) = self.deserialize(cookie)
 		plaintext = self.getData(cookie)
 		return self.serialize(user, expiration, plaintext)
+	##
+	# @brief get the data from a cookie
+	#
+	# @param cookie cookie stream created by serialize()
+	#
+	# @return decrypted data section of the cookie
 	def getData(self, cookie):
 		(user, expiration, ciphertext, mac) = self.deserialize(cookie)
 		key = hashk(user, expiration, self._secret)
 		plaintext = decrypt(ciphertext.ljust(256, '\0'), str(key)[:16], self._ivec)
 		return plaintext.rstrip('\0')
+	##
+	# @brief set data field for a cookie
+	#
+	# @param cookie the original cookie stream created by serialize()
+	# @param data the new data
+	#
+	# @return serialize cookie stream with updated data
 	def setData(self, cookie, data):
 		if not self.isValid(cookie):
 			l.warn("SECURITY ALERT: Setting data on invalid cookie.")
 		(user, expiration, _, _) = self.deserialize(cookie)
 		return self.serialize(user, expiration, data)
+	##
+	# @brief detect if the cookie integrity has been compromised.
+	#
+	# @param cookie the cookie stream created by serialize()
+	#
+	# @return  True or False
 	def isValid(self, cookie):
 		(user, expiration, ciphertext, mac) = self.deserialize(cookie)
 		key = hashk(user, expiration, self._secret)
@@ -199,47 +255,6 @@ class SecureCookie:
 		if mac == vmac:
 			return True
 		return False
-
-##
-# @brief Implementation of Secure Cookie Protocol
-#class SecureCookie:
-	##
-	# @brief Initialize packed cookie data
-	#
-	# @param user username (public)
-	# @param exp cookie expiration date (public)
-	# @param data any data to be stored securely (private)
-	# @param session SSL session ID (public)
-	#
-	# @return a Secure Cookie object suitable for passing to the client
-#	def __init__(self, user, exp, data, session):
-#		if not secret_key:
-#			l.error("Failed to instantiate %s: "
-#					"No secret key initialized."
-#					% self.__class__.__name__)
-#			return None
-#		hash_key = hashk(user, exp, secret_key)
-#		hashed_data = hashd(user, exp, data, session, str(hash_key))
-#		# we need a way to consistently create the initialization vector.
-#		# we can simply hash the session key to get deterministic output
-#		s = hashlib.sha1()
-#		s.update(str(session))
-#		i_vec = s.digest()[:16]
-#		ciphertext = encrypt(data.ljust(256, '\0'), str(hash_key)[:16], i_vec)
-#		self.cookie = struct.pack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT,
-#				user, exp, ciphertext, hashed_data)
-#		self._user = user
-#		self._expiration = exp
-#		self._ciphertext = ciphertext
-#		self._i_vec = i_vec
-#	@property
-#	def user(self):
-#		return self._user
-#	@property
-#	def data(self):
-#		hash_key = hashk(self._user, self._expiration, secret_key)
-#		plaintext = decrypt(self._ciphertext, str(hash_key)[:16], self._i_vec)
-#		return plaintext
 
 # Values for testing
 TEST_USER = 'mytestuser'
@@ -306,7 +321,6 @@ class TestSecureCookie(unittest.TestCase):
 		s = c.serialize(TEST_USER, TEST_EXPIRATION, TEST_DATA)
 		self.assertFalse(s is None)
 		self.assertTrue(c.isValid(s))
-
 
 if __name__ == "__main__":
 	# run from the same directory as the module

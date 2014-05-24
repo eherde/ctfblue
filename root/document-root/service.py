@@ -145,7 +145,7 @@ class index:
 		if not logged_on():
 			return logon_redirect()
 		books = web.d.getBooks()
-		serial = cookie = web.cookies().get(COOKIE_NAME)
+		serial = web.cookies().get(COOKIE_NAME)
 		user = session.cookie.getData(serial)
 		return render.index(user, books)
 
@@ -153,11 +153,19 @@ class index:
 ##
 # @brief Interface for creating users
 class adduser:
+	##
+	# @brief display the adduser page
+	#
+	# @return adduser page
 	def GET(self):
 		l.info('GET adduser')
 		expire_cookie()
 		cap = captcha.displayhtml(web.captcha_public_key, use_ssl=True, error="Something broke.")
 		return render.adduser(cap)
+	##
+	# @brief create a new user
+	#
+	# @return redirect to index
 	def POST(self):
 		l.info('POST adduser')
 		i = web.input()
@@ -218,7 +226,7 @@ class logon:
 	##
 	# @brief attempts to logon to receive an authentication cookie
 	#
-	# @return the index page on success, logon page on failure
+	# @return redirect to index on success, logon on failure
 	@csrf_protected
 	def POST(self):
 		l.info('POST logon')
@@ -244,10 +252,25 @@ class logon:
 		create_cookie(str(db_guid), username)
 		return web.seeother('/')
 
+##
+# @brief checkout page
 class checkout():
+	##
+	# @brief we don't implement a GET for this page
+	# but web.py will give the user 'not found' if
+	# we don't have something here. Simply redirect
+	# to the index page because something went wrong.
+	#
+	# @return redirect to index
 	def GET(self):
 		l.info('GET checkout')
 		web.seeother('/')
+	##
+	# @brief display page for credit card entry
+	# we should display what user is logged in
+	# on this page
+	#
+	# @return checkout page
 	@csrf_protected
 	def POST(self):
 		l.info('POST checkout')
@@ -259,11 +282,27 @@ class checkout():
 			return web.seeother('/')
 		book = i['book']
 		return render.checkout(book)
+
+##
+# @brief purchase page
 class purchase():
+	##
+	# @brief we don't implement a GET for this page
+	# but web.py will give the user 'not found' if
+	# we don't have something here. Simply redirect
+	# to the index page because something went wrong.
+	#
+	# @return redirect to index
 	def GET(self):
 		l.info('GET purchase')
 		web.seeother('/')
 	@csrf_protected
+	##
+	# @brief display the confirmation page. This page should
+	# display the name of the logged on user, the book, and
+	# redacted parts of the billing information
+	#
+	# @return the purchase page
 	def POST(self):
 		l.info('POST purchase')
 		if not logged_on():

@@ -200,10 +200,9 @@ class TestDB(unittest.TestCase):
 		self.db.xec.query("CREATE TABLE Users(GUID, Username UNIQUE, Password, SessionID)")
 		self.db.xec.query("CREATE TABLE Books(Name, Price)")
 		self.db.xec.query('INSERT INTO Books VALUES ("Secure Electronic Commerce", 27.50)')
-	def tearDown(self):
-		pass
 	def test_init(self):
 		# Initialization is already tested in setup
+		# This is a necessary evil if we are going to keep the database in memory
 		pass
 	def test_init_neg(self):
 		self.assertRaises(IOError, DB, '')
