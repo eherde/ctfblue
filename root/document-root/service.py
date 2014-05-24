@@ -33,6 +33,7 @@ urls = (
 	'/', 'index',
 	'/adduser', 'adduser',
 	'/logon', 'logon',
+	'/logoff', 'logoff',
 	'/checkout', 'checkout',
 	'/purchase', 'purchase',
 )
@@ -126,6 +127,11 @@ def csrf_protected(f):
 		return f(*args, **kwargs)
 	return decorated
 
+def add_logoff(f):
+	def decorated(*args, **kwargs):
+		return render.logoff(unicode(f(*args, **kwargs)))
+	return decorated
+
 ##
 # @brief The rendering engine, updated with the directory we care about
 # and the csrf token. This allows templates to reference the csrf token.
@@ -138,6 +144,7 @@ class index:
 	# @brief generate index
 	#
 	# @return the index page.
+	@add_logoff
 	def GET(self):
 		l.info('GET index')
 		if not logged_on():
@@ -251,6 +258,17 @@ class logon:
 		return web.seeother('/')
 
 ##
+# @brief logoff the system
+class logoff:
+	##
+	# @brief simple redirect to the logon page
+	#
+	# @return redirect to logon page
+	def GET(self):
+		l.info('GET logoff')
+		return logon_redirect()
+
+##
 # @brief checkout page
 class checkout():
 	##
@@ -269,6 +287,7 @@ class checkout():
 	# on this page
 	#
 	# @return checkout page
+	@add_logoff
 	@csrf_protected
 	def POST(self):
 		l.info('POST checkout')
@@ -296,6 +315,7 @@ class purchase():
 	def GET(self):
 		l.info('GET purchase')
 		web.seeother('/')
+	@add_logoff
 	@csrf_protected
 	##
 	# @brief display the confirmation page. This page should
