@@ -89,6 +89,15 @@ class DB:
 		return self.setSessionID(args, NULL_SESSION_ID)
 	def getBooks(self):
 		return self.xec.select('Books', what='*')
+	def getPrice(self, book):
+		where = dict(Name=book)
+		res = self.xec.select('Books', what='Price', where=web.db.sqlwhere(where))
+		try:
+			return res[0].Price
+		except IndexError:
+			l.warn('No entry for %s' % book)
+		except AttributeError:
+			l.critical('BUG: no attribute Price')
 	##
 	# @brief Get entries associated with a user by username
 	#
@@ -223,6 +232,12 @@ class TestDB(unittest.TestCase):
 	def test_getBooks(self):
 		res = self.db.getBooks()
 		self.assertFalse(res is None)
+	def test_getPrice(self):
+		res = self.db.getPrice('Secure Electronic Commerce')
+		self.assertEqual(res, 27.50)
+	def test_getPrice_neg_nobook(self):
+		res = self.db.getPrice('Not a Book')
+		self.assertTrue(res is None)
 	def test_getUser(self):
 		guid = self.db.addUser(testuser, testpass)
 		self.assertFalse(guid is None)

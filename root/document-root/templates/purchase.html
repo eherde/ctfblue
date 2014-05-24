@@ -1,13 +1,16 @@
-$def with (book)
+$def with (user, name, card, book, price)
 <!DOCTYPE html>
 <html lang = "en" background = "green">
 <head>
 <h1>Confirmation</h1>
 </head>
 <body>
-	Thank you for your purchase:<br>
-	Name: $book <br>
-	Price $5 <br>
+	Logged in as $user<br><br>
+	Thank you for your purchase. Information:<br><br>
+	Book: $book <br>
+	Price: $$$price <br>
+	Name: $name <br>
+	Card ending in $card[-4:] <br>
 	Return to the index <a href="/">here</a>
 </body>
 </html>

@@ -325,8 +325,19 @@ class purchase():
 		if 'expyear' not in i:
 			l.error('expyear required for POST')
 			return render.error(web.ctx.fullpath, 'BADREQ', 'missing expyear')
-		book = 'foo'
-		return render.purchase(book)
+		if 'book' not in i:
+			l.error('book required for POST')
+			return render.error(web.ctx.fullpath, 'BADREQ', 'missing book')
+		name = i['name']
+		card = i['card']
+		book = i['book']
+		price = web.d.getPrice(book)
+		l.critical("getting cookie")
+		serial = web.cookies().get(COOKIE_NAME)
+		l.critical("got serial")
+		user = session.cookie.getData(serial)
+		l.critical("got cookie")
+		return render.purchase(user, name, card, book, price)
 
 if __name__ == "__main__":
 	# run from the same directory as the service file
