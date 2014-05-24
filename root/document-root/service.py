@@ -41,7 +41,7 @@ urls = (
 ## Name of authorization cookie
 COOKIE_NAME = 'ctfauth'
 ## Cookie expiration time, in seconds
-COOKIE_TTL = 100
+COOKIE_TTL = 300 # five minutes
 
 ##
 # @brief get information specific to this session.
