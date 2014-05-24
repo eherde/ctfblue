@@ -22,7 +22,6 @@ import config
 import db
 import scp
 from log import l, exceptions
-import captcha
 
 ## Set the path to our configuration
 configfile = os.path.join('ctf-data/ctf.yaml')
@@ -87,7 +86,6 @@ def expire_cookie():
 def create_cookie(guid, data):
 	# this may produce a slight variation in expiration dates between what we set
 	# and what web.py sets, but we really don't care.
-	expiration = int(time.time()) + COOKIE_TTL
 	session.cookie = scp.SecureCookie(get_session_hash(), web.secret)
 	serial = session.cookie.serialize(guid, int(time.time()) + COOKIE_TTL, data)
 	web.setcookie(COOKIE_NAME, serial, COOKIE_TTL, secure=True, httponly=True)

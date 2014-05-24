@@ -121,36 +121,6 @@ def decrypt(msg, key, iv):
 	return crypter.decrypt(msg)
 
 ##
-# @brief determine whether a cookie is valid
-#
-# @param cookie cookie data (public).
-# @param session SSL session ID (public)
-#
-# @return  True or False
-def is_valid(cookie_data, session):
-	if not secret:
-		l.error("Cannot validate cookie. Secret key uninitialized.")
-	unpacked = struct.unpack(USER_FMT + EXPR_FMT + DATA_FMT + DGST_FMT, cookie_data)
-	if len(unpacked) != 4:
-		l.error("Failed to unpack cookie data.")
-	user = unpacked[0]
-	exp = unpacked[1]
-	ciphertext = unpacked[2]
-	hashed_data = unpacked[3]
-	hash_key = hashk(user, exp, secret)
-	# we need a way to consistently create the initialization vector.
-	# we can simply hash the session key to get deterministic output
-	s = hashlib.sha1()
-	s.update(str(session))
-	i_vec = s.digest()[:16]
-	plaintext = decrypt(ciphertext.ljust(256,'\0'), str(hash_key)[:16], i_vec)
-	verified_hash = hashd(user, exp, plaintext, session, str(hash_key))
-	if hashed_data == verified_hash:
-		return True
-	else:
-		return False
-
-##
 # @brief Secure Cookie implementation
 class SecureCookie:
 	##

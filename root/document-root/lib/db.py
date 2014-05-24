@@ -87,8 +87,18 @@ class DB:
 	# @return True or False
 	def clearSessionID(self, args):
 		return self.setSessionID(args, NULL_SESSION_ID)
+	##
+	# @brief get all books in the table
+	#
+	# @return iterable of all books
 	def getBooks(self):
 		return self.xec.select('Books', what='*')
+	##
+	# @brief lookup the price of a book
+	#
+	# @param book the full name of the book
+	#
+	# @return the price of the book
 	def getPrice(self, book):
 		where = dict(Name=book)
 		res = self.xec.select('Books', what='Price', where=web.db.sqlwhere(where))
