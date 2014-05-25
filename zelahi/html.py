@@ -41,7 +41,7 @@ class Xssfilter(HTMLParser):
 		self.open_tags = [] 
 		self.allowed_attributes = {'a':['href','title'], 'img':['src','alt'] } 
 		self.allowed_schemes = ['https']
-		self.permitted_tags = ['fieldset','form']
+		self.permitted_tags = ['fieldset','form', 'p','input']
 		self.requires_no_close = ['img','br','html']
 	##	
 	# @brief: escapes the data and removes unwanted HTML tags
@@ -83,8 +83,7 @@ class Xssfilter(HTMLParser):
 			breakTag = "<" + tag
 			if tag in self.allowed_attributes:
 				attrs = dict(attrs)
-				self.allowed_attributes_here = \
-					[i for i in self.allowed_attributes[tag] if x in attrs and len(attrs[i]) > 0]
+				self.allowed_attributes_here = [i for i in self.allowed_attributes[tag] if x in attrs and len(attrs[i]) > 0]
 				for attribute in self.allowed_attributes_here:
 					if attribute in ['href', 'src', 'background']:
 						if self.url_is_acceptable(attrs[attribute]):
