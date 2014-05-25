@@ -1,0 +1,28 @@
+$def with (captcha)
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+<h1>New User Registration</h1>
+</head>
+<script>
+	function checkPassword(form) {
+		if(form.password.value != form.password2.value) {
+			alert("Passwords do not match!");
+			window.location.replace("https://www.ericherde.com/logon");
+		}
+	}
+
+</script>
+<body>
+	Username and Password must be alphanumeric strings between 4 and 16 characters long.
+	<form id="login" action="adduser" method="POST" onsubmit="checkPassword(this)">
+	<fieldset id="inputs">
+		Username: <input type="text" name="username" placeholder="username" autocomplete="off" maxlength="16" autofocus required pattern="[a-zA-z0-9]{4,16}"><br>
+		Password: <input type="password" name="password" placeholder="password" autocomplete="off" maxlength="16" required pattern="[a-zA-Z0-9]{4,16}"><br>
+		Confirm Password: <input type="password" name="password2" placeholder="password" autocomplete="off" maxlength="16" required pattern="[a-zA-Z0-9]{4,16}"><br>
+	</fieldset>
+	$:captcha
+	<input id="submit" type="submit" value="Submit">
+	</form>
+</body>
+</html>
