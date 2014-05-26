@@ -50,7 +50,7 @@ class DB:
 	# @brief Add a new user to the database
 	#
 	# @param username the username
-	# @param password the 20 character password hash
+	# @param password the 40 character password hash
 	#
 	# @return guid associated with this user
 	def addUser(self, username, password):

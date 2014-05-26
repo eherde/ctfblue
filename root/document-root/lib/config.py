@@ -59,6 +59,8 @@ class Configurator:
 			with file(keyfile) as f:
 				self._secret = f.read()
 		return self._secret
+	##
+	# @return public key file
 	@property
 	def captcha_public_key(self):
 		path = self._config['captcha']['public']
@@ -68,6 +70,8 @@ class Configurator:
 		except IOError:
 			return None
 		return self._captcha_public_key
+	##
+	# @return private key file
 	@property
 	def captcha_private_key(self):
 		path = self._config['captcha']['private']

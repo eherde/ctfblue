@@ -66,7 +66,7 @@ def get_session_info():
 ##
 # @brief Hash the all values of session information into a single string
 #
-# @return 40 character string that is the hash of HTTP session information
+# @return 20 byte hash of HTTP session information
 def get_session_hash():
 	values = get_session_info()
 	h = hashlib.sha1()
