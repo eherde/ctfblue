@@ -72,7 +72,7 @@ def get_session_hash():
 	h = hashlib.sha1()
 	for value in values:
 		h.update(value)
-	return h.hexdigest()
+	return h.digest()
 
 ##
 # @brief redirect the user to the logon page.
@@ -270,7 +270,7 @@ class logon:
 		h.update(password)
 		# hash with salt
 		h.update(username)
-		(db_guid, db_session) = web.d.getValidUser(username, h.hexdigest())
+		db_guid = web.d.getValidUser(username, h.hexdigest())
 		if not db_guid:
 			# invalid credentials
 			return logon_redirect()

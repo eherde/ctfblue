@@ -20,8 +20,8 @@
 # - username   => 64 characters
 # - expiration => long long
 # - data       => 256 characters
-# - Session ID => long long
-# - Digest     => 20 characters
+# - Session ID => 20 bytes
+# - Digest     => 20 bytes
 
 # system modules
 import hashlib
@@ -42,7 +42,7 @@ sys.dont_write_byte_code = True
 USER_FMT = '64s'
 EXPR_FMT = 'q'
 DATA_FMT = '256s'
-SESS_FMT = '36s'
+SESS_FMT = '20s'
 DGST_FMT = '20s'
 
 ##
