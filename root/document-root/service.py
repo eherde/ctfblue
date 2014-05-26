@@ -135,6 +135,12 @@ def csrf_protected(f):
 		return f(*args, **kwargs)
 	return decorated
 
+##
+# @brief decorator for adding logoff link to bottom of all pages
+#
+# @param f The function to decorate
+#
+# @return the decorated function
 def add_logoff(f):
 	def decorated(*args, **kwargs):
 		return render.logoff(unicode(f(*args, **kwargs)))
